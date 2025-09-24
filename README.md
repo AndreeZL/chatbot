@@ -17,3 +17,5 @@
    - `python database/insert_psicologo.py`
 5. Ejecutar la app:
    - `python vista\app.py`
+6. Ver la base de datos en VSC:
+   - `python utils/ver_db.py`

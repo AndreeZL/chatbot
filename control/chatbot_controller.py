@@ -6,6 +6,9 @@ from chatbot_repo.chatbot import responder_texto
 import datetime
 import os
 
+# Importar función de derivación automática
+from utils.derivar_automatico import derivar_si_riesgo
+
 # Configuración de la base de datos
 DB_PATH = os.getenv("CHATBOT_DB", "sqlite:///chatbot.db")
 engine = create_engine(DB_PATH, echo=False)
@@ -19,18 +22,18 @@ class ChatbotController:
     def __init__(self):
         self.session = Session()
 
-    def registrar_estudiante(self, nombre, correo, carrera=""):
+    def registrar_estudiante(self, nombre, correo, carrera):
         """Crea o devuelve un estudiante según correo"""
         estudiante = self.session.query(Estudiante).filter_by(correo=correo).first()
         if not estudiante:
             estudiante = Estudiante(nombre=nombre, correo=correo, carrera=carrera)
             self.session.add(estudiante)
             self.session.commit()
-            print(f"✅ Estudiante registrado: {nombre} ({correo})")
+            print(f"✅ Estudiante registrado: {nombre} ({correo}) {carrera}")
         return estudiante
 
     def procesar_mensaje(self, correo_estudiante, mensaje):
-        """Procesa un mensaje del estudiante, detecta emoción, guarda en BD y devuelve respuesta"""
+        """Procesa un mensaje del estudiante, detecta emoción, guarda en BD, deriva si es de riesgo y devuelve respuesta"""
 
         # Palabras clave de despedida
         despedidas = ["chao", "adios", "adiós", "salir", "eso es todo"]
@@ -59,16 +62,22 @@ class ChatbotController:
         self.session.add(conv)
         self.session.commit()
 
+        # 🔹 Derivación automática si el mensaje es de riesgo
+        respuesta_derivacion = derivar_si_riesgo(conv)
+        if respuesta_derivacion:
+            conv.respuesta_chatbot = respuesta_derivacion
+            self.session.commit()
+            respuesta = respuesta_derivacion  # actualizar la respuesta que se envía al estudiante
+
         return {"emocion": emocion, "respuesta": respuesta, "conversacion_id": conv.id}
 
-
     def derivar_a_psicologo(self, conversacion_id, psicologo_id):
-        """Registra una derivación de conversación a un psicólogo"""
+        """Registra manualmente una derivación de conversación a un psicólogo"""
         deriv = Derivacion(
             conversacion_id=conversacion_id,
             psicologo_id=psicologo_id,
             fecha_derivacion=str(datetime.date.today()),
-            estado="derivado"
+            estado="pendiente"
         )
         self.session.add(deriv)
         self.session.commit()

@@ -1,5 +1,5 @@
 # modelo/models.py
-from sqlalchemy import Column, Integer, String, Date, Time, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Time, Text, ForeignKey, Enum
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -12,6 +12,7 @@ class Estudiante(Base):
     correo = Column(String(100), unique=True)
 
     conversaciones = relationship("Conversacion", back_populates="estudiante")
+    derivaciones = relationship("Derivacion", back_populates="estudiante")
 
 class Psicologo(Base):
     __tablename__ = 'psicologos'
@@ -19,6 +20,8 @@ class Psicologo(Base):
     nombre = Column(String(100), nullable=False)
     especialidad = Column(String(100))
     correo = Column(String(100), unique=True)
+
+    derivaciones = relationship("Derivacion", back_populates="psicologo")
 
 class Conversacion(Base):
     __tablename__ = 'conversaciones'
@@ -31,11 +34,19 @@ class Conversacion(Base):
     respuesta_chatbot = Column(Text)
 
     estudiante = relationship("Estudiante", back_populates="conversaciones")
+    derivaciones = relationship("Derivacion", back_populates="conversacion")
 
 class Derivacion(Base):
     __tablename__ = 'derivaciones'
     id = Column(Integer, primary_key=True)
-    conversacion_id = Column(Integer, ForeignKey('conversaciones.id'))
+    conversacion_id = Column(Integer, ForeignKey('conversaciones.id'), nullable=True)
+    estudiante_id = Column(Integer, ForeignKey('estudiantes.id'), nullable=True)  # Permite anonimato
     psicologo_id = Column(Integer, ForeignKey('psicologos.id'))
     fecha_derivacion = Column(String(20))
-    estado = Column(String(50))
+    estado = Column(Enum('pendiente', 'atendido', 'cerrado'), default='pendiente')
+    datos_anonimos = Column(Text)  # Mensaje resumido/anónimo
+    mensaje_estudiante = Column(Text)  # Mensaje de confirmación/orientación
+
+    conversacion = relationship("Conversacion", back_populates="derivaciones")
+    estudiante = relationship("Estudiante", back_populates="derivaciones")
+    psicologo = relationship("Psicologo", back_populates="derivaciones")

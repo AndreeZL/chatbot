@@ -14,12 +14,18 @@ def login():
     if request.method == "POST":
         correo = request.form.get("correo")
         nombre = request.form.get("nombre")
+        carrera = request.form.get("carrera")  # obligatorio
 
-        if correo and nombre:
-            controller.registrar_estudiante(nombre, correo)
+        # Validar que todos los campos estén completos
+        if correo and nombre and carrera:
+            # Pasar carrera al registrar_estudiante
+            controller.registrar_estudiante(nombre, correo, carrera)
             session["correo"] = correo
             session["nombre"] = nombre
+            session["carrera"] = carrera
             return redirect(url_for("chat"))
+        else:
+            return render_template("login.html", error="Todos los campos son obligatorios.")
 
     return render_template("login.html")
 
@@ -34,7 +40,6 @@ def chat():
             controller.procesar_mensaje(session["correo"], texto)
 
     mensajes = controller.obtener_conversacion(session["correo"])
-
     return render_template("chat.html", nombre=session["nombre"], mensajes=mensajes)
 
 @app.route("/directorio")
@@ -42,7 +47,7 @@ def directorio():
     if "correo" not in session:
         return redirect(url_for("login"))
     
-    profesionales = controller.obtener_profesionales()  # lo implementamos en el controller
+    profesionales = controller.obtener_profesionales()
     return render_template("directorio.html", profesionales=profesionales)
 
 @app.route("/logout")

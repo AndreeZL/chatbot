@@ -30,6 +30,7 @@ CREATE TABLE Conversacion (
 CREATE TABLE Derivacion (
   id_derivacion INT AUTO_INCREMENT PRIMARY KEY,
   id_conversacion INT,
+  id_estudiante INT,
   id_psicologo INT,
   fecha_derivacion DATE,
   estado VARCHAR(50),
