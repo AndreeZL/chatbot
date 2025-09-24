@@ -1,29 +1,33 @@
 # utils/ver_db.py
-import sqlite3
+import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 import pandas as pd
 
-def mostrar_tablas(db_path="chatbot.db"):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+DB_PATH = os.getenv("CHATBOT_DB", "sqlite:///chatbot.db")
+engine = create_engine(DB_PATH, echo=False)
+Session = sessionmaker(bind=engine)
+session = Session()
 
-    # Mostrar todas las tablas
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tablas = cursor.fetchall()
-    print("📌 Tablas encontradas en la BD:\n", [t[0] for t in tablas], "\n")
+# Opciones para que pandas no trunque
+pd.set_option("display.max_rows", None)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.max_colwidth", None)
+pd.set_option("display.width", 2000)
+pd.set_option("display.expand_frame_repr", False)
 
-    # Mostrar contenido de cada tabla
-    for (tabla,) in tablas:
-        print(f"🔹 Contenido de la tabla '{tabla}':")
-        try:
-            df = pd.read_sql_query(f"SELECT * FROM {tabla}", conn)
-            if df.empty:
-                print("(vacía)\n")
-            else:
-                print(df, "\n")
-        except Exception as e:
-            print(f"Error leyendo la tabla {tabla}: {e}\n")
-
-    conn.close()
+def mostrar_tabla(nombre_tabla):
+    df = pd.read_sql_table(nombre_tabla, con=engine)
+    print(f"\n🔹 Contenido de la tabla '{nombre_tabla}':")
+    # Mostrar todo sin truncar
+    print(df.to_string(index=False))
 
 if __name__ == "__main__":
-    mostrar_tablas("chatbot.db")
+    # Lista de tablas que quieres ver (ajusta si tus tablas tienen otros nombres)
+    tablas = ["estudiantes", "psicologos", "conversaciones", "derivaciones"]
+    for t in tablas:
+        try:
+            mostrar_tabla(t)
+        except Exception as e:
+            print(f"(omitida {t}) -> {e}")
+    session.close()

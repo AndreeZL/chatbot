@@ -1,6 +1,10 @@
+import os
+import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from modelo.models import Psicologo, Base
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Conexión a la base de datos (ajústala si usas MySQL en lugar de SQLite)
 engine = create_engine("sqlite:///chatbot.db")  
