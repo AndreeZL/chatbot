@@ -23,6 +23,7 @@ CREATE TABLE Conversacion (
   hora TIME,
   mensaje_usuario TEXT,
   emocion_detectada VARCHAR(50),
+  nivel_estres VARCHAR(20),
   respuesta_chatbot TEXT,
   FOREIGN KEY (id_estudiante) REFERENCES Estudiante(id_estudiante)
 );

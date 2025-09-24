@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from modelo.models import Estudiante, Conversacion, Derivacion, Psicologo, Base
 from chatbot_repo.chatbot import responder_texto
+from utils.predict_stress import predecir_estres
 import datetime
 import os
 
@@ -33,7 +34,7 @@ class ChatbotController:
         return estudiante
 
     def procesar_mensaje(self, correo_estudiante, mensaje):
-        """Procesa un mensaje del estudiante, detecta emoción, guarda en BD, deriva si es de riesgo y devuelve respuesta"""
+        """Procesa un mensaje del estudiante, detecta emoción, nivel de estrés, guarda en BD, deriva si es de riesgo y devuelve respuesta"""
 
         # Palabras clave de despedida
         despedidas = ["chao", "adios", "adiós", "salir", "eso es todo"]
@@ -42,7 +43,7 @@ class ChatbotController:
             emocion = "despedida"
             respuesta = "👋 Nos vemos, recuerda que siempre estaré aquí para ti."
         else:
-            # Usa la lógica normal del bot
+            # Detectar emoción con el chatbot
             emocion, respuesta = responder_texto(mensaje)
 
         # Buscar estudiante en la BD
@@ -50,13 +51,17 @@ class ChatbotController:
         if not estudiante:
             raise ValueError("El estudiante no está registrado.")
 
-        # Guardar la conversación en la BD
+        # 🔹 Predecir nivel de estrés
+        nivel_estres = predecir_estres(mensaje)
+
+        # 🔹 Guardar la conversación con emoción y nivel de estrés
         conv = Conversacion(
             estudiante_id=estudiante.id,
             fecha=str(datetime.date.today()),
             hora=str(datetime.datetime.now().time()),
             mensaje_usuario=mensaje,
             emocion_detectada=emocion,
+            nivel_estres=nivel_estres,
             respuesta_chatbot=respuesta
         )
         self.session.add(conv)
@@ -69,7 +74,12 @@ class ChatbotController:
             self.session.commit()
             respuesta = respuesta_derivacion  # actualizar la respuesta que se envía al estudiante
 
-        return {"emocion": emocion, "respuesta": respuesta, "conversacion_id": conv.id}
+        return {
+            "emocion": emocion,
+            "nivel_estres": nivel_estres,
+            "respuesta": respuesta,
+            "conversacion_id": conv.id
+        }
 
     def derivar_a_psicologo(self, conversacion_id, psicologo_id):
         """Registra manualmente una derivación de conversación a un psicólogo"""

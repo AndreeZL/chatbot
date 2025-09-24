@@ -31,6 +31,7 @@ class Conversacion(Base):
     hora = Column(String(20))
     mensaje_usuario = Column(Text)
     emocion_detectada = Column(String(50))
+    nivel_estres = Column(String(20))  # Nueva columna
     respuesta_chatbot = Column(Text)
 
     estudiante = relationship("Estudiante", back_populates="conversaciones")
