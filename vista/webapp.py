@@ -28,17 +28,22 @@ def chat():
     if "correo" not in session:
         return redirect(url_for("login"))
 
-    mensajes = session.get("mensajes", [])
-
     if request.method == "POST":
         texto = request.form.get("texto")
         if texto:
-            resultado = controller.procesar_mensaje(session["correo"], texto)
-            mensajes.append(("Tú", texto))
-            mensajes.append(("Bot", resultado["respuesta"]))
-            session["mensajes"] = mensajes
+            controller.procesar_mensaje(session["correo"], texto)
+
+    mensajes = controller.obtener_conversacion(session["correo"])
 
     return render_template("chat.html", nombre=session["nombre"], mensajes=mensajes)
+
+@app.route("/directorio")
+def directorio():
+    if "correo" not in session:
+        return redirect(url_for("login"))
+    
+    profesionales = controller.obtener_profesionales()  # lo implementamos en el controller
+    return render_template("directorio.html", profesionales=profesionales)
 
 @app.route("/logout")
 def logout():

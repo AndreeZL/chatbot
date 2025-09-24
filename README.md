@@ -12,5 +12,8 @@
    - `pip install -r requirements.txt`
 3. Crear la base de datos SQLite:
    - `python database\setup_db.py`
-4. Ejecutar la app:
+4. Insertar psicologo al directorio (ejecutar uno de los dos):
+   - `python -m database.insert_psicologo`
+   - `python database/insert_psicologo.py`
+5. Ejecutar la app:
    - `python vista\app.py`

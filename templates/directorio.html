@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Directorio de Profesionales</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+    header { background: #4CAF50; color: white; padding: 15px; text-align: center; }
+    table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    th { background: #4CAF50; color: white; }
+    a { text-decoration: none; }
+
+    /* Estilo del botón naranja */
+    .btn-volver {
+      display: inline-block;
+      background-color: #ff9800;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    .btn-volver:hover {
+      background-color: #e68900;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>Directorio de Psicólogos y Tutores</h2>
+  </header>
+  <table>
+    <tr>
+      <th>Nombre</th>
+      <th>Especialidad</th>
+      <th>Correo</th>
+    </tr>
+    {% for p in profesionales %}
+    <tr>
+      <td>{{ p.nombre }}</td>
+      <td>{{ p.especialidad }}</td>
+      <td><a href="mailto:{{ p.correo }}">{{ p.correo }}</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div style="text-align:center; margin:20px;">
+    <a href="{{ url_for('chat') }}" class="btn-volver">⬅️ Volver al chat</a>
+  </div>
+</body>
+</html>

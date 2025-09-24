@@ -12,13 +12,73 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      overflow-x: hidden; /* evita scroll horizontal */
     }
+
+    /* Header */
     header {
       background: #4CAF50;
       color: white;
-      padding: 15px;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* Distribuye contenido */
+    }
+    header h2 {
+      margin: 0;
+      font-size: 18px;
+      flex: 1;
       text-align: center;
     }
+    .menu-btn {
+      font-size: 22px;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* Botón de logout en el header */
+    .logout {
+      background-color: #c62828;
+      color: white;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .logout:hover {
+      background-color: #b71c1c;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      height: 100%;
+      width: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: #11852e;
+      overflow-x: hidden;
+      transition: 0.3s;
+      padding-top: 60px;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+    }
+    .sidebar a {
+      padding: 15px 25px;
+      text-decoration: none;
+      font-size: 18px;
+      color: white;
+      display: block;
+      transition: 0.2s;
+    }
+    .sidebar a:hover {
+      background-color: #084b0f;
+    }
+
+    /* Chat */
     .chat-container {
       flex: 1;
       padding: 20px;
@@ -41,6 +101,7 @@
       background: #E5E5EA;
       align-self: flex-start;
     }
+
     form {
       display: flex;
       padding: 10px;
@@ -69,10 +130,21 @@
   </style>
 </head>
 <body>
+  <!-- Sidebar -->
+  <div id="sidebar" class="sidebar">
+    <div>
+      <a href="{{ url_for('directorio') }}">📖 Directorio</a>
+    </div>
+  </div>
+
+  <!-- Header -->
   <header>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
     <h2>👋 Hola {{ nombre }}, bienvenido a EmotiBot</h2>
+    <a href="{{ url_for('logout') }}" class="logout">🚪 Cerrar sesión</a>
   </header>
 
+  <!-- Chat -->
   <div class="chat-container">
     {% for remitente, texto in mensajes %}
       <div class="mensaje {% if remitente == 'Tú' %}usuario{% else %}bot{% endif %}">
@@ -81,9 +153,29 @@
     {% endfor %}
   </div>
 
+  <!-- Formulario -->
   <form method="POST">
     <input type="text" name="texto" placeholder="Escribe tu mensaje aquí..." required autofocus>
     <button type="submit">Enviar</button>
   </form>
+
+  <script>
+    function toggleSidebar() {
+      let sidebar = document.getElementById("sidebar");
+      if (sidebar.style.width === "250px") {
+        sidebar.style.width = "0";
+      } else {
+        sidebar.style.width = "250px";
+      }
+    }
+
+    // Cerrar el sidebar si haces clic fuera
+    window.onclick = function(event) {
+      let sidebar = document.getElementById("sidebar");
+      if (!event.target.matches('.menu-btn') && sidebar.style.width === "250px") {
+        sidebar.style.width = "0";
+      }
+    }
+  </script>
 </body>
 </html>

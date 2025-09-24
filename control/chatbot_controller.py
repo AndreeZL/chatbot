@@ -6,9 +6,14 @@ from chatbot_repo.chatbot import responder_texto
 import datetime
 import os
 
+# Configuración de la base de datos
 DB_PATH = os.getenv("CHATBOT_DB", "sqlite:///chatbot.db")
 engine = create_engine(DB_PATH, echo=False)
 Session = sessionmaker(bind=engine)
+
+# Crear las tablas si no existen
+Base.metadata.create_all(engine)
+
 
 class ChatbotController:
     def __init__(self):
@@ -25,12 +30,24 @@ class ChatbotController:
         return estudiante
 
     def procesar_mensaje(self, correo_estudiante, mensaje):
-        emocion, respuesta = responder_texto(mensaje)
+        """Procesa un mensaje del estudiante, detecta emoción, guarda en BD y devuelve respuesta"""
 
+        # Palabras clave de despedida
+        despedidas = ["chao", "adios", "adiós", "salir", "eso es todo"]
+
+        if mensaje.lower().strip() in despedidas:
+            emocion = "despedida"
+            respuesta = "👋 Nos vemos, recuerda que siempre estaré aquí para ti."
+        else:
+            # Usa la lógica normal del bot
+            emocion, respuesta = responder_texto(mensaje)
+
+        # Buscar estudiante en la BD
         estudiante = self.session.query(Estudiante).filter_by(correo=correo_estudiante).first()
         if not estudiante:
             raise ValueError("El estudiante no está registrado.")
 
+        # Guardar la conversación en la BD
         conv = Conversacion(
             estudiante_id=estudiante.id,
             fecha=str(datetime.date.today()),
@@ -44,7 +61,9 @@ class ChatbotController:
 
         return {"emocion": emocion, "respuesta": respuesta, "conversacion_id": conv.id}
 
+
     def derivar_a_psicologo(self, conversacion_id, psicologo_id):
+        """Registra una derivación de conversación a un psicólogo"""
         deriv = Derivacion(
             conversacion_id=conversacion_id,
             psicologo_id=psicologo_id,
@@ -54,3 +73,27 @@ class ChatbotController:
         self.session.add(deriv)
         self.session.commit()
         return deriv
+
+    def obtener_profesionales(self):
+        """Devuelve la lista completa de psicólogos registrados"""
+        profesionales = self.session.query(Psicologo).all()
+        return profesionales
+
+    def obtener_conversacion(self, correo_estudiante):
+        """Devuelve la lista de mensajes (usuario y bot) de un estudiante"""
+        estudiante = self.session.query(Estudiante).filter_by(correo=correo_estudiante).first()
+        if not estudiante:
+            return []
+
+        conversaciones = (
+            self.session.query(Conversacion)
+            .filter_by(estudiante_id=estudiante.id)
+            .order_by(Conversacion.id.asc())
+            .all()
+        )
+
+        mensajes = []
+        for c in conversaciones:
+            mensajes.append(("Tú", c.mensaje_usuario))
+            mensajes.append(("Bot", c.respuesta_chatbot))
+        return mensajes
