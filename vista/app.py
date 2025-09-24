@@ -14,14 +14,15 @@ def main():
     nombre = input("Ingrese su nombre completo: ").strip()
     controller.registrar_estudiante(nombre, correo)
 
-    print(f"\n👋 Hola {nombre}, puedes empezar a conversar conmigo. (Escribe 'salir' para terminar)\n")
+    print(f"\nHola {nombre}, puedes empezar a conversar conmigo. (Escribe 'salir' para terminar)\n")
 
     while True:
         texto = input("Tú: ").strip()
         if texto.lower() in ["salir", "adios", "chao"]:
-            print("Chatbot: Cuídate mucho 👋")
+            resultado = controller.procesar_mensaje(correo, texto)
+            controller.procesar_mensaje(correo, texto)  # Guarda también el "salir"
+            print("Chatbot:", resultado["respuesta"])
             break
-        resultado = controller.procesar_mensaje(correo, texto)
         print("Chatbot:", resultado["respuesta"])
 
 if __name__ == "__main__":
