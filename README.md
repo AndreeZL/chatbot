@@ -19,5 +19,3 @@
    - `python -m vista.webapp`
 6. Ver la base de datos en VSC:
    - `python utils/ver_db.py`
-7. Crear el dataset:
-   - `python data/stress_dataset.py`

@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from modelo.models import Estudiante, Conversacion, Derivacion, Psicologo, Base
 from chatbot_repo.chatbot import responder_texto
 from utils.predict_stress import predecir_estres
+from utils.predict_ansiedad_depresion import predecir_ansiedad_depresion
 import datetime
 import os
 
@@ -14,7 +15,7 @@ from utils.derivar_automatico import derivar_si_riesgo
 # Configuración de la base de datos MySQL
 # ----------------------------
 DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "andreezl13")  # cambia tu_pass por tu contraseña
+DB_PASSWORD = os.getenv("DB_PASSWORD", "andreezl13")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_NAME = os.getenv("DB_NAME", "chatbot_db")
 
@@ -34,19 +35,18 @@ class ChatbotController:
         self.session = Session()
 
     def registrar_estudiante(self, nombre, correo, carrera):
-        """Crea o devuelve un estudiante según correo y agrega mensaje de bienvenida si es nuevo"""
+        """Crea o devuelve un estudiante según correo"""
         estudiante = self.session.query(Estudiante).filter_by(correo=correo).first()
         if not estudiante:
             estudiante = Estudiante(nombre=nombre, correo=correo, carrera=carrera)
             self.session.add(estudiante)
             self.session.commit()
             print(f"✅ Estudiante registrado: {nombre} ({correo}) {carrera}")
-
-            self.session.commit()
         return estudiante
 
     def procesar_mensaje(self, correo_estudiante, mensaje):
-        """Procesa un mensaje del estudiante, detecta emoción, nivel de estrés, guarda en BD, deriva si es de riesgo y devuelve respuesta"""
+        """Procesa un mensaje del estudiante, detecta emoción, predice estrés y ansiedad/depresión,
+        guarda en BD, deriva si es de riesgo y devuelve respuesta"""
 
         despedidas = ["chao", "adios", "adiós", "salir", "eso es todo"]
 
@@ -61,8 +61,9 @@ class ChatbotController:
         if not estudiante:
             raise ValueError("El estudiante no está registrado.")
 
-        # Predecir nivel de estrés
+        # 🔹 Predicciones automáticas
         nivel_estres = predecir_estres(mensaje)
+        ansiedad, depresion = predecir_ansiedad_depresion(mensaje)  # ansiedad y depresión separados
 
         # Guardar la conversación con tipos compatibles para MySQL
         conv = Conversacion(
@@ -72,6 +73,8 @@ class ChatbotController:
             mensaje_usuario=mensaje,
             emocion_detectada=emocion,
             nivel_estres=nivel_estres,
+            ansiedad=ansiedad,
+            depresion=depresion,
             respuesta_chatbot=respuesta
         )
         self.session.add(conv)
