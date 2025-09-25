@@ -1,51 +1,111 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Directorio de Profesionales</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
-    header { background: #4CAF50; color: white; padding: 15px; text-align: center; }
-    table { width: 80%; margin: 20px auto; border-collapse: collapse; }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-    th { background: #4CAF50; color: white; }
-    a { text-decoration: none; }
+<meta charset="UTF-8">
+<title>Directorio de Profesionales</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
 
-    /* Estilo del botón naranja */
+    .container {
+        background: white;
+        width: 90%;
+        max-width: 900px;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        padding: 30px;
+        box-sizing: border-box;
+        animation: fadeIn 1s ease-out;
+    }
+
+    h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 25px;
+        font-size: 1.8em;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    th, td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ccc;
+        font-size: 15px;
+    }
+
+    th {
+        background: #4CAF50;
+        color: white;
+        border-radius: 10px 10px 0 0;
+    }
+
+    tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    a {
+        color: #2196F3;
+        text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+
+    /* Botón volver */
     .btn-volver {
-      display: inline-block;
-      background-color: #ff9800;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
-      font-weight: bold;
-      transition: background 0.3s;
+        display: inline-block;
+        background: #4CAF50;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 25px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s;
+        text-align: center;
     }
     .btn-volver:hover {
-      background-color: #e68900;
+        background: #45a049;
+        transform: translateY(-2px);
     }
-  </style>
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+</style>
 </head>
 <body>
-  <header>
+<div class="container">
     <h2>Directorio de Psicólogos y Tutores</h2>
-  </header>
-  <table>
-    <tr>
-      <th>Nombre</th>
-      <th>Especialidad</th>
-      <th>Correo</th>
-    </tr>
-    {% for p in profesionales %}
-    <tr>
-      <td>{{ p.nombre }}</td>
-      <td>{{ p.especialidad }}</td>
-      <td><a href="mailto:{{ p.correo }}">{{ p.correo }}</a></td>
-    </tr>
-    {% endfor %}
-  </table>
-  <div style="text-align:center; margin:20px;">
-    <a href="{{ url_for('chat') }}" class="btn-volver">⬅️ Volver al chat</a>
-  </div>
+    <table>
+        <tr>
+            <th>Nombre</th>
+            <th>Especialidad</th>
+            <th>Correo</th>
+        </tr>
+        {% for p in profesionales %}
+        <tr>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.especialidad }}</td>
+            <td><a href="mailto:{{ p.correo }}">{{ p.correo }}</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    <div style="text-align:center;">
+        <a href="{{ url_for('chat') }}" class="btn-volver">⬅️ Volver al chat</a>
+    </div>
+</div>
 </body>
 </html>

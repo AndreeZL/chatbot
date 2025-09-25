@@ -1,181 +1,216 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>EmotiBot - Chat</title>
-  <style>
+<meta charset="UTF-8">
+<title>EmotiBot - Chat</title>
+<style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow-x: hidden; /* evita scroll horizontal */
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+        overflow: hidden;
     }
 
     /* Header */
     header {
-      background: #4CAF50;
-      color: white;
-      padding: 15px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between; /* Distribuye contenido */
+        background: #4CAF50;
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        position: relative;
+        z-index: 10;
     }
     header h2 {
-      margin: 0;
-      font-size: 18px;
-      flex: 1;
-      text-align: center;
+        margin: 0;
+        font-size: 25px;
+        flex: 1;
+        text-align: center;
     }
     .menu-btn {
-      font-size: 22px;
-      background: none;
-      border: none;
-      color: white;
-      cursor: pointer;
+        font-size: 22px;
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
     }
-
-    /* Botón de logout en el header */
     .logout {
-      background-color: #c62828;
-      color: white;
-      text-decoration: none;
-      padding: 8px 15px;
-      border-radius: 5px;
-      font-size: 14px;
+        background-color: #c62828;
+        color: white;
+        text-decoration: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: 0.3s;
     }
-    .logout:hover {
-      background-color: #b71c1c;
-    }
+    .logout:hover { background-color: #b71c1c; }
 
     /* Sidebar */
     .sidebar {
-      height: 100%;
-      width: 0;
-      position: fixed;
-      top: 0;
-      left: 0;
-      background-color: #11852e;
-      overflow-x: hidden;
-      transition: 0.3s;
-      padding-top: 60px;
-      display: flex;
-      flex-direction: column;
-      z-index: 1000;
+        height: 100%;
+        width: 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: #11852e;
+        overflow-x: hidden;
+        transition: 0.3s;
+        padding-top: 60px;
+        display: flex;
+        flex-direction: column;
+        z-index: 1000;
+        border-right: 2px solid #0a3f12;
     }
     .sidebar a {
-      padding: 15px 25px;
-      text-decoration: none;
-      font-size: 18px;
-      color: white;
-      display: block;
-      transition: 0.2s;
+        padding: 15px 25px;
+        text-decoration: none;
+        font-size: 18px;
+        color: white;
+        display: block;
+        transition: 0.2s;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
     }
-    .sidebar a:hover {
-      background-color: #084b0f;
+    .sidebar a:hover { background-color: #084b0f; }
+
+    /* Chat container */
+    .chat-container {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        margin-left: 0;
+        transition: margin-left 0.3s;
     }
 
-    /* Chat */
-    .chat-container {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-    }
     .mensaje {
-      max-width: 70%;
-      padding: 10px 15px;
-      margin: 5px 0;
-      border-radius: 20px;
-      line-height: 1.4;
+        max-width: 70%;
+        padding: 12px 18px;
+        margin: 6px 0;
+        border-radius: 20px;
+        line-height: 1.5;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        word-wrap: break-word;
+        font-size: 15px;
+        transition: all 0.2s;
     }
     .usuario {
-      background: #DCF8C6;
-      align-self: flex-end;
+        background: #DCF8C6;
+        align-self: flex-end;
+        border-bottom-right-radius: 0;
     }
     .bot {
-      background: #E5E5EA;
-      align-self: flex-start;
+        background: #E5E5EA;
+        align-self: flex-start;
+        border-bottom-left-radius: 0;
     }
 
+    /* Form */
     form {
-      display: flex;
-      padding: 10px;
-      background: #fff;
-      border-top: 1px solid #ccc;
+        display: flex;
+        padding: 15px;
+        background: #fff;
+        border-top: 1px solid #ccc;
     }
     input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 20px;
-      outline: none;
+        flex: 1;
+        padding: 12px 15px;
+        border: 1px solid #ccc;
+        border-radius: 25px;
+        outline: none;
+        font-size: 15px;
+        transition: all 0.2s;
+    }
+    input[type="text"]:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 8px rgba(76,175,80,0.3);
     }
     button {
-      background: #4CAF50;
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      margin-left: 10px;
-      border-radius: 20px;
-      cursor: pointer;
+        background: #4CAF50;
+        border: none;
+        color: white;
+        padding: 12px 20px;
+        margin-left: 10px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
     }
-    button:hover {
-      background: #45a049;
+    button:hover { background: #45a049; }
+
+    /* Scrollbar personalizado */
+    .chat-container::-webkit-scrollbar {
+        width: 8px;
     }
-  </style>
+    .chat-container::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.2);
+        border-radius: 4px;
+    }
+    .chat-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+</style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <div id="sidebar" class="sidebar">
-    <div>
-      <a href="{{ url_for('directorio') }}">📖 Directorio</a>
+<!-- Sidebar -->
+<div id="sidebar" class="sidebar">
+  <a href="{{ url_for('directorio') }}">📖 Directorio</a>
+</div>
+
+<!-- Header -->
+<header>
+  <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+  <h2>👋 Hola {{ nombre }}, bienvenido a EmotiBot</h2>
+  <a href="{{ url_for('logout') }}" class="logout">🚪 Cerrar sesión</a>
+</header>
+
+<!-- Chat -->
+<div id="chat" class="chat-container">
+  {% for remitente, texto in mensajes %}
+    <div class="mensaje {% if remitente == 'Tú' %}usuario{% else %}bot{% endif %}">
+      <strong>{{ remitente }}:</strong> {{ texto }}
     </div>
-  </div>
+  {% endfor %}
+</div>
 
-  <!-- Header -->
-  <header>
-    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-    <h2>👋 Hola {{ nombre }}, bienvenido a EmotiBot</h2>
-    <a href="{{ url_for('logout') }}" class="logout">🚪 Cerrar sesión</a>
-  </header>
+<!-- Formulario -->
+<form method="POST">
+  <input type="text" name="texto" placeholder="Escribe tu mensaje aquí..." required autofocus>
+  <button type="submit">Enviar</button>
+</form>
 
-  <!-- Chat -->
-  <div class="chat-container">
-    {% for remitente, texto in mensajes %}
-      <div class="mensaje {% if remitente == 'Tú' %}usuario{% else %}bot{% endif %}">
-        <strong>{{ remitente }}:</strong> {{ texto }}
-      </div>
-    {% endfor %}
-  </div>
-
-  <!-- Formulario -->
-  <form method="POST">
-    <input type="text" name="texto" placeholder="Escribe tu mensaje aquí..." required autofocus>
-    <button type="submit">Enviar</button>
-  </form>
-
-  <script>
-    function toggleSidebar() {
-      let sidebar = document.getElementById("sidebar");
-      if (sidebar.style.width === "250px") {
-        sidebar.style.width = "0";
-      } else {
-        sidebar.style.width = "250px";
-      }
+<script>
+  function toggleSidebar() {
+    let sidebar = document.getElementById("sidebar");
+    let chat = document.getElementById("chat");
+    if (sidebar.style.width === "250px") {
+      sidebar.style.width = "0";
+      chat.style.marginLeft = "0";
+    } else {
+      sidebar.style.width = "250px";
+      chat.style.marginLeft = "250px";
     }
+  }
 
-    // Cerrar el sidebar si haces clic fuera
-    window.onclick = function(event) {
-      let sidebar = document.getElementById("sidebar");
-      if (!event.target.matches('.menu-btn') && sidebar.style.width === "250px") {
-        sidebar.style.width = "0";
-      }
+  // Cerrar sidebar al hacer clic fuera
+  window.onclick = function(event) {
+    let sidebar = document.getElementById("sidebar");
+    if (!event.target.matches('.menu-btn') && sidebar.style.width === "250px") {
+      sidebar.style.width = "0";
+      document.getElementById("chat").style.marginLeft = "0";
     }
-  </script>
+  }
+
+  // Scroll automático al final del chat
+  let chatContainer = document.getElementById("chat");
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+</script>
 </body>
 </html>
