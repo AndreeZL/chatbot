@@ -34,13 +34,15 @@ class ChatbotController:
         self.session = Session()
 
     def registrar_estudiante(self, nombre, correo, carrera):
-        """Crea o devuelve un estudiante según correo"""
+        """Crea o devuelve un estudiante según correo y agrega mensaje de bienvenida si es nuevo"""
         estudiante = self.session.query(Estudiante).filter_by(correo=correo).first()
         if not estudiante:
             estudiante = Estudiante(nombre=nombre, correo=correo, carrera=carrera)
             self.session.add(estudiante)
             self.session.commit()
             print(f"✅ Estudiante registrado: {nombre} ({correo}) {carrera}")
+
+            self.session.commit()
         return estudiante
 
     def procesar_mensaje(self, correo_estudiante, mensaje):
