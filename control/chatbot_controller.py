@@ -10,9 +10,19 @@ import os
 # Importar función de derivación automática
 from utils.derivar_automatico import derivar_si_riesgo
 
-# Configuración de la base de datos
-DB_PATH = os.getenv("CHATBOT_DB", "sqlite:///chatbot.db")
-engine = create_engine(DB_PATH, echo=False)
+# ----------------------------
+# Configuración de la base de datos MySQL
+# ----------------------------
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "andreezl13")  # cambia tu_pass por tu contraseña
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_NAME = os.getenv("DB_NAME", "chatbot_db")
+
+# Engine MySQL + SQLAlchemy
+engine = create_engine(
+    f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}",
+    echo=False
+)
 Session = sessionmaker(bind=engine)
 
 # Crear las tablas si no existen
@@ -36,7 +46,6 @@ class ChatbotController:
     def procesar_mensaje(self, correo_estudiante, mensaje):
         """Procesa un mensaje del estudiante, detecta emoción, nivel de estrés, guarda en BD, deriva si es de riesgo y devuelve respuesta"""
 
-        # Palabras clave de despedida
         despedidas = ["chao", "adios", "adiós", "salir", "eso es todo"]
 
         if mensaje.lower().strip() in despedidas:
@@ -46,19 +55,18 @@ class ChatbotController:
             # Detectar emoción con el chatbot
             emocion, respuesta = responder_texto(mensaje)
 
-        # Buscar estudiante en la BD
         estudiante = self.session.query(Estudiante).filter_by(correo=correo_estudiante).first()
         if not estudiante:
             raise ValueError("El estudiante no está registrado.")
 
-        # 🔹 Predecir nivel de estrés
+        # Predecir nivel de estrés
         nivel_estres = predecir_estres(mensaje)
 
-        # 🔹 Guardar la conversación con emoción y nivel de estrés
+        # Guardar la conversación con tipos compatibles para MySQL
         conv = Conversacion(
             estudiante_id=estudiante.id,
-            fecha=str(datetime.date.today()),
-            hora=str(datetime.datetime.now().time()),
+            fecha=datetime.date.today(),
+            hora=datetime.datetime.now().time(),
             mensaje_usuario=mensaje,
             emocion_detectada=emocion,
             nivel_estres=nivel_estres,
@@ -67,12 +75,12 @@ class ChatbotController:
         self.session.add(conv)
         self.session.commit()
 
-        # 🔹 Derivación automática si el mensaje es de riesgo
-        respuesta_derivacion = derivar_si_riesgo(conv)
+        # Derivación automática si el mensaje es de riesgo
+        respuesta_derivacion = derivar_si_riesgo(conv, self.session)
         if respuesta_derivacion:
             conv.respuesta_chatbot = respuesta_derivacion
             self.session.commit()
-            respuesta = respuesta_derivacion  # actualizar la respuesta que se envía al estudiante
+            respuesta = respuesta_derivacion
 
         return {
             "emocion": emocion,
@@ -86,7 +94,7 @@ class ChatbotController:
         deriv = Derivacion(
             conversacion_id=conversacion_id,
             psicologo_id=psicologo_id,
-            fecha_derivacion=str(datetime.date.today()),
+            fecha_derivacion=datetime.date.today(),
             estado="pendiente"
         )
         self.session.add(deriv)
@@ -95,8 +103,7 @@ class ChatbotController:
 
     def obtener_profesionales(self):
         """Devuelve la lista completa de psicólogos registrados"""
-        profesionales = self.session.query(Psicologo).all()
-        return profesionales
+        return self.session.query(Psicologo).all()
 
     def obtener_conversacion(self, correo_estudiante):
         """Devuelve la lista de mensajes (usuario y bot) de un estudiante"""

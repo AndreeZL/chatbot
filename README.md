@@ -16,7 +16,7 @@
    - `python -m database.insert_psicologo`
    - `python database/insert_psicologo.py`
 5. Ejecutar la app:
-   - `python vista\app.py`
+   - `python -m vista.webapp`
 6. Ver la base de datos en VSC:
    - `python utils/ver_db.py`
 7. Crear el dataset:

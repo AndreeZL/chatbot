@@ -1,16 +1,18 @@
 # utils/derivar_automatico.py
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 from datetime import datetime
-from modelo.models import Derivacion, Conversacion, Psicologo
-
-engine = create_engine("sqlite:///chatbot.db")  # Ajusta según tu DB
-Session = sessionmaker(bind=engine)
-session = Session()
+from modelo.models import Derivacion
 
 PALABRAS_RIESGO = ["lastimarme", "suicidio", "morir", "desaparecer", "no quiero vivir"]
 
-def derivar_si_riesgo(conversacion, psicologo_id=1):
+def derivar_si_riesgo(conversacion, session, psicologo_id=1):
+    """
+    Revisa el mensaje de la conversación y deriva a psicólogo si detecta palabras de riesgo.
+
+    :param conversacion: objeto Conversacion
+    :param session: sesión SQLAlchemy (ya creada en el controller)
+    :param psicologo_id: ID del psicólogo al que derivar
+    :return: mensaje para el estudiante si es de riesgo, o None
+    """
     mensaje = conversacion.mensaje_usuario.lower()
     if any(palabra in mensaje for palabra in PALABRAS_RIESGO):
         datos_anonimos = f"Mensaje de riesgo detectado: {mensaje[:100]}..."
@@ -22,7 +24,7 @@ def derivar_si_riesgo(conversacion, psicologo_id=1):
             conversacion_id=conversacion.id,
             estudiante_id=conversacion.estudiante_id,  # opcional para anonimato
             psicologo_id=psicologo_id,
-            fecha_derivacion=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            fecha_derivacion=datetime.now(),
             estado='pendiente',
             datos_anonimos=datos_anonimos,
             mensaje_estudiante=mensaje_estudiante

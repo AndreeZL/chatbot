@@ -2,8 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>EMOTIBOT - Inicio de Sesión</title>
+<title>EMOTIBOT - Registro</title>
 <style>
+    /* Body centrado y fondo degradado */
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         display: flex;
@@ -14,6 +15,7 @@
         background: linear-gradient(135deg, #74ebd5, #ACB6E5);
     }
 
+    /* Caja centrada con flex interno para simetría */
     .box {
         display: flex;
         flex-direction: column;
@@ -75,19 +77,14 @@
         box-shadow: 0 6px 12px rgba(0,0,0,0.1);
     }
 
-    button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    }
+    button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 
     .secondary-btn {
         background: #ccc;
         color: #333;
         margin-top: 10px;
     }
-    .secondary-btn:hover {
-        background: #bbb;
-    }
+    .secondary-btn:hover { background: #bbb; }
 
     p {
         margin-top: 15px;
@@ -100,15 +97,10 @@
         text-decoration: none;
         font-weight: bold;
     }
-    p a:hover {
-        text-decoration: underline;
-    }
+    p a:hover { text-decoration: underline; }
 
-    .error {
-        color: red;
-        margin-bottom: 10px;
-        font-size: 14px;
-    }
+    .error { color: red; margin-bottom: 10px; font-size: 14px; }
+    .success { color: green; margin-bottom: 10px; font-size: 14px; }
 
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-20px); }
@@ -118,7 +110,7 @@
 </head>
 <body>
 <div class="box">
-    <h2>Iniciar Sesión</h2>
+    <h2>Registro</h2>
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -127,12 +119,14 @@
       {% endif %}
     {% endwith %}
     <form method="post">
+        <input type="text" name="nombre" placeholder="Nombre completo" required>
         <input type="email" name="correo" placeholder="Correo institucional" required>
+        <input type="text" name="carrera" placeholder="Carrera" required>
         <input type="password" name="password" placeholder="Contraseña" required>
-        <button type="submit">Ingresar</button>
+        <button type="submit">Registrarse</button>
     </form>
     <button class="secondary-btn" onclick="window.location.href='/'">Volver al inicio</button>
-    <p>¿No tienes cuenta? <a href="/register">Regístrate</a></p>
+    <p>¿Ya tienes cuenta? <a href="/login">Inicia sesión</a></p>
 </div>
 </body>
 </html>

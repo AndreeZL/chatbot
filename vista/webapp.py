@@ -1,31 +1,74 @@
 # vista/webapp.py
 import sys, os
+import mysql.connector
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from control.chatbot_controller import ChatbotController
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "..", "templates"))
 app.secret_key = "emotibot-secret"  # clave para sesiones
 controller = ChatbotController()
 
-@app.route("/", methods=["GET", "POST"])
+# Conexión a MySQL
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="andreezl13",
+    database="chatbot_db"
+)
+cursor = db.cursor(dictionary=True)
+
+# ---------------- Landing ----------------
+@app.route("/")
+def index():
+    return render_template("landing.html")
+
+# ---------------- Registro ----------------
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        nombre = request.form["nombre"]
+        correo = request.form["correo"]
+        carrera = request.form["carrera"]
+        password = request.form["password"]
+
+        cursor.execute("SELECT * FROM estudiantes WHERE correo=%s", (correo,))
+        user = cursor.fetchone()
+        if user:
+            flash("El correo ya está registrado", "error")
+            return render_template("register.html")
+
+        hashed_password = generate_password_hash(password)
+        cursor.execute(
+            "INSERT INTO estudiantes (nombre, correo, carrera, password) VALUES (%s, %s, %s, %s)",
+            (nombre, correo, carrera, hashed_password)
+        )
+        db.commit()
+
+        flash("Registro exitoso, ahora inicia sesión", "success")
+        return redirect(url_for("login"))
+
+    return render_template("register.html")
+
+# ---------------- Login ----------------
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        correo = request.form.get("correo")
-        nombre = request.form.get("nombre")
-        carrera = request.form.get("carrera")  # obligatorio
+        correo = request.form["correo"]
+        password = request.form["password"]
 
-        # Validar que todos los campos estén completos
-        if correo and nombre and carrera:
-            # Pasar carrera al registrar_estudiante
-            controller.registrar_estudiante(nombre, correo, carrera)
-            session["correo"] = correo
-            session["nombre"] = nombre
-            session["carrera"] = carrera
+        cursor.execute("SELECT * FROM estudiantes WHERE correo=%s", (correo,))
+        user = cursor.fetchone()
+        if user and check_password_hash(user["password"], password):
+            session["correo"] = user["correo"]
+            session["nombre"] = user["nombre"]
+            session["carrera"] = user["carrera"]
             return redirect(url_for("chat"))
         else:
-            return render_template("login.html", error="Todos los campos son obligatorios.")
+            flash("Correo o contraseña incorrectos", "error")
+            return render_template("login.html")
 
     return render_template("login.html")
 

@@ -1,6 +1,7 @@
 # modelo/models.py
-from sqlalchemy import Column, Integer, String, Date, Time, Text, ForeignKey, Enum
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy import Column, Enum, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
@@ -43,7 +44,7 @@ class Derivacion(Base):
     conversacion_id = Column(Integer, ForeignKey('conversaciones.id'), nullable=True)
     estudiante_id = Column(Integer, ForeignKey('estudiantes.id'), nullable=True)  # Permite anonimato
     psicologo_id = Column(Integer, ForeignKey('psicologos.id'))
-    fecha_derivacion = Column(String(20))
+    fecha_derivacion = Column(DateTime)
     estado = Column(Enum('pendiente', 'atendido', 'cerrado'), default='pendiente')
     datos_anonimos = Column(Text)  # Mensaje resumido/anónimo
     mensaje_estudiante = Column(Text)  # Mensaje de confirmación/orientación
