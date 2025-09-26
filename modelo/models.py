@@ -1,5 +1,6 @@
 # modelo/models.py
-from sqlalchemy import Column, Enum, Integer, String, DateTime, ForeignKey, Text
+import datetime
+from sqlalchemy import Boolean, Column, Date, Enum, Integer, String, DateTime, ForeignKey, Text, Time
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -14,6 +15,7 @@ class Estudiante(Base):
 
     conversaciones = relationship("Conversacion", back_populates="estudiante")
     derivaciones = relationship("Derivacion", back_populates="estudiante")
+    recomendaciones = relationship("Recomendacion", back_populates="estudiante")
 
 class Psicologo(Base):
     __tablename__ = 'psicologos'
@@ -54,3 +56,16 @@ class Derivacion(Base):
     conversacion = relationship("Conversacion", back_populates="derivaciones")
     estudiante = relationship("Estudiante", back_populates="derivaciones")
     psicologo = relationship("Psicologo", back_populates="derivaciones")
+
+class Recomendacion(Base):
+    __tablename__ = "recomendacion"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    estudiante_id = Column(Integer, ForeignKey("estudiantes.id"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    hora = Column(Time, nullable=False)
+    texto = Column(String(500), nullable=False)
+    tipo = Column(String(50), nullable=True)  # Ej: "taller", "ejercicio", "artículo"
+    util = Column(Boolean, nullable=True)  # True = útil, False = no útil, None = no evaluada
+
+    estudiante = relationship("Estudiante", back_populates="recomendaciones")

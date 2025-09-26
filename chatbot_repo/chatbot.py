@@ -51,13 +51,12 @@ def obtener_respuesta(emocion):
     }
     return random.choice(respuestas.get(emocion, respuestas["desconocido"]))
 
-# función utilitaria para obtener respuesta por texto
 def responder_texto(texto):
-    e = detectar_emocion(texto)
-    r = obtener_respuesta(e)
-    return e, r
+    emocion = detectar_emocion(texto)
+    respuesta = obtener_respuesta(emocion)
+    return emocion, respuesta
 
-# Mantengo tu loop interactivo solo si ejecutas este archivo directamente
+# Si ejecutas este archivo directamente, permite chat interactivo
 if __name__ == "__main__":
     print("Hola, soy EMOTIBOT. Escribe 'salir' para terminar.")
     while True:
