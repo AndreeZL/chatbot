@@ -12,6 +12,7 @@ class Estudiante(Base):
     nombre = Column(String(100), nullable=False)
     carrera = Column(String(100))
     correo = Column(String(100), unique=True)
+    password = Column(String(255), nullable=False)
 
     conversaciones = relationship("Conversacion", back_populates="estudiante")
     derivaciones = relationship("Derivacion", back_populates="estudiante")

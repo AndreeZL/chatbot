@@ -1,6 +1,8 @@
-import os
-from modelo.models import Base
 from sqlalchemy import create_engine
+
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from modelo.models import Base
 
 # Configuración MySQL
 DB_USER = os.getenv("DB_USER", "root")
