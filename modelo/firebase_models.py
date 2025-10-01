@@ -5,15 +5,17 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 
 # ------------------------------
-# 🔥 Inicialización de Firebase
+# 🔥 Inicialización de Firebase usando variable de entorno
 # ------------------------------
-# Ruta al archivo de credenciales JSON (ajústalo según dónde lo guardaste)
-cred_path = os.path.join(os.path.dirname(__file__), "..", "database","chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")
+# Se espera que la variable FIREBASE_CREDENTIALS contenga el JSON de credenciales
+cred_json = os.environ.get("FIREBASE_CREDENTIALS")
 
-# Inicializar Firebase solo si no está inicializado
 if not firebase_admin._apps:
-    cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred)
+    if cred_json:
+        cred = credentials.Certificate(eval(cred_json))  # Convertimos string a dict
+        firebase_admin.initialize_app(cred)
+    else:
+        raise ValueError("No se encontró la variable de entorno FIREBASE_CREDENTIALS con las credenciales de Firebase.")
 
 db = firestore.client()
 
@@ -61,11 +63,7 @@ def obtener_psicologos():
 # ------------------------------
 def guardar_conversacion(estudiante_id, mensaje_usuario, emocion_detectada,
                          nivel_estres, ansiedad, depresion, respuesta_chatbot, conv_id=None):
-    if conv_id:
-        doc_ref = db.collection("conversaciones").document(conv_id)
-    else:
-        doc_ref = db.collection("conversaciones").document()
-
+    doc_ref = db.collection("conversaciones").document(conv_id) if conv_id else db.collection("conversaciones").document()
     data = {
         "estudiante_id": estudiante_id,
         "fecha": datetime.date.today().isoformat(),
