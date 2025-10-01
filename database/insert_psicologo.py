@@ -1,41 +1,29 @@
 import os
 import sys
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from modelo.models import Psicologo, Base
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 # Agregar ruta del proyecto
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # ----------------------------
-# Configuración MySQL
+# Inicializar Firebase
 # ----------------------------
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "andreezl13")  # cambia por tu contraseña
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_NAME = os.getenv("DB_NAME", "chatbot_db")
+if not firebase_admin._apps:  # evitar inicializar más de una vez
+    cred = credentials.Certificate("database/chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")  
+    firebase_admin.initialize_app(cred)
 
-# Crear engine MySQL
-engine = create_engine(
-    f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}",
-    echo=False
-)
+db = firestore.client()
 
-# Crear sesión
-Session = sessionmaker(bind=engine)
-session = Session()
+# ----------------------------
+# Insertar Psicólogo
+# ----------------------------
+psicologa = {
+    "nombre": "Karolai Alania",
+    "especialidad": "Psicología Clínica",
+    "correo": "karolai.alania@continental.edu.pe"
+}
 
-# Crear las tablas si no existen
-Base.metadata.create_all(engine)
+db.collection("psicologos").add(psicologa)
 
-# Crear registro de psicólogo
-psicologa = Psicologo(
-    nombre="Karolai Alania",
-    especialidad="Psicología Clínica",
-    correo="karolai.alania@continental.edu.pe"
-)
-
-session.add(psicologa)
-session.commit()
-
-print("✅ Psicóloga Karolai Alania agregada al directorio")
+print("✅ Psicóloga Karolai Alania agregada al directorio en Firebase")

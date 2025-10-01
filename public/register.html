@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>EMOTIBOT - Registro</title>
+<style>
+    /* Body centrado y fondo degradado */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+    }
+
+    /* Caja centrada con flex interno para simetría */
+    .box {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        width: 320px;
+        max-width: 90%;
+        animation: fadeIn 1s ease-out;
+        box-sizing: border-box;
+    }
+
+    h2 {
+        margin-bottom: 25px;
+        color: #333;
+        font-size: 1.8em;
+        text-align: center;
+    }
+
+    form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        font-size: 15px;
+        transition: all 0.2s;
+        box-sizing: border-box;
+    }
+
+    input:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+        outline: none;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        margin-top: 15px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #4CAF50, #2E7D32);
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+
+    button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+
+    .secondary-btn {
+        background: #ccc;
+        color: #333;
+        margin-top: 10px;
+    }
+    .secondary-btn:hover { background: #bbb; }
+
+    p {
+        margin-top: 15px;
+        font-size: 14px;
+        color: #555;
+        text-align: center;
+    }
+    p a {
+        color: #2196F3;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    p a:hover { text-decoration: underline; }
+
+    .error { color: red; margin-bottom: 10px; font-size: 14px; }
+    .success { color: green; margin-bottom: 10px; font-size: 14px; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+</head>
+<body>
+<div class="box">
+    <h2>Registro</h2>
+    
+    <!-- Mensaje dinámico con JS -->
+    <p id="message" class=""></p>
+
+    <form method="post">
+        <input type="text" name="nombre" placeholder="Nombre completo" required>
+        <input type="email" name="correo" placeholder="Correo institucional" required>
+        <input type="text" name="carrera" placeholder="Carrera" required>
+        <input type="password" name="password" placeholder="Contraseña" required>
+        <button type="submit">Registrarse</button>
+    </form>
+    <button class="secondary-btn" onclick="window.location.href='/'">Volver al inicio</button>
+    <p>¿Ya tienes cuenta? <a href="/login">Inicia sesión</a></p>
+</div>
+
+<script type="module">
+    import { auth, db } from './firebase-config.js';
+    import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+    
+    const form = document.getElementById('registerForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+    
+      const nombre = form.nombre.value;
+      const correo = form.correo.value;
+      const carrera = form.carrera.value;
+      const password = form.password.value;
+    
+      try {
+        // 1️⃣ Crear usuario en Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, correo, password);
+        const uid = userCredential.user.uid;
+    
+        // 2️⃣ Guardar datos adicionales en Firestore
+        await setDoc(doc(db, "usuarios", uid), {
+          nombre,
+          correo,
+          carrera,
+          tipo: "estudiante"
+        });
+    
+        alert("✅ Registro exitoso");
+        window.location.href = "login.html";
+    
+      } catch (error) {
+        alert("❌ Error: " + error.message);
+      }
+    });
+    </script>
+
+</body>
+</html>

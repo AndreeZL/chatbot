@@ -1,41 +1,35 @@
 # control/chatbot_controller.py
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from modelo.models import Estudiante, Conversacion, Derivacion, Psicologo, Recomendacion, Base
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from chatbot_repo.chatbot import detectar_emocion, obtener_respuesta
 from utils.predict_stress import predecir_estres
 from utils.predict_ansiedad_depresion import predecir_ansiedad_depresion
-import datetime
-import os
-import random
-
-# ----------------------------
-# Configuración de la base de datos MySQL
-# ----------------------------
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "andreezl13")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_NAME = os.getenv("DB_NAME", "chatbot_db")
-
-engine = create_engine(
-    f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}",
-    echo=False
+from modelo.firebase_models import (
+    crear_estudiante, obtener_estudiante_por_correo,
+    guardar_conversacion, guardar_recomendacion,
+    guardar_derivacion, obtener_psicologos,
+    obtener_conversaciones
 )
-Session = sessionmaker(bind=engine)
-Base.metadata.create_all(engine)
+import datetime
+import random
+import firebase_admin
+from firebase_admin import credentials, firestore
 
+# Inicializar Firebase
+if not firebase_admin._apps:
+    cred = credentials.Certificate("database/chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")  
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 
 class ChatbotController:
-    def __init__(self):
-        self.session = Session()
-
     def registrar_estudiante(self, nombre, correo, carrera):
-        estudiante = self.session.query(Estudiante).filter_by(correo=correo).first()
+        estudiante = obtener_estudiante_por_correo(correo)
         if not estudiante:
-            estudiante = Estudiante(nombre=nombre, correo=correo, carrera=carrera)
-            self.session.add(estudiante)
-            self.session.commit()
-            print(f"✅ Estudiante registrado: {nombre} ({correo}) {carrera}")
+            estudiante_id = crear_estudiante(nombre, correo, carrera)
+            print(f"✅ Estudiante registrado en Firestore: {nombre} ({correo}) {carrera}")
+            return {"id": estudiante_id, "nombre": nombre, "correo": correo, "carrera": carrera}
         return estudiante
 
     def generar_recomendacion(self, estudiante_id, nivel_estres, ansiedad, depresion):
@@ -82,17 +76,8 @@ class ChatbotController:
 
         recomendacion = random.choice(opciones)
 
-        # Guardar en BD
-        rec = Recomendacion(
-            estudiante_id=estudiante_id,
-            fecha=datetime.date.today(),
-            hora=datetime.datetime.now().time(),
-            texto=recomendacion,
-            tipo="automática",
-            util=None
-        )
-        self.session.add(rec)
-        self.session.commit()
+        # Guardar en Firestore
+        guardar_recomendacion(estudiante_id, recomendacion)
 
         return recomendacion
 
@@ -106,43 +91,43 @@ class ChatbotController:
             emocion = detectar_emocion(mensaje)
             respuesta = obtener_respuesta(emocion)
 
-        estudiante = self.session.query(Estudiante).filter_by(correo=correo_estudiante).first()
+        estudiante = obtener_estudiante_por_correo(correo_estudiante)
         if not estudiante:
             raise ValueError("El estudiante no está registrado.")
+
+        estudiante_id = estudiante["id"]
 
         # Predicciones automáticas
         nivel_estres = predecir_estres(mensaje)
         ansiedad, depresion = predecir_ansiedad_depresion(mensaje)
 
-        # Guardar la conversación inicialmente
-        conv = Conversacion(
-            estudiante_id=estudiante.id,
-            fecha=datetime.date.today(),
-            hora=datetime.datetime.now().time(),
-            mensaje_usuario=mensaje,
-            emocion_detectada=emocion,
-            nivel_estres=nivel_estres,
-            ansiedad=ansiedad,
-            depresion=depresion,
-            respuesta_chatbot=respuesta
+        # Guardar conversación inicial
+        conv_id = guardar_conversacion(
+            estudiante_id, mensaje, emocion, nivel_estres, ansiedad, depresion, respuesta
         )
-        self.session.add(conv)
-        self.session.commit()
 
-        # Generar recomendación y actualizar respuesta
-        recomendacion = self.generar_recomendacion(estudiante.id, nivel_estres, ansiedad, depresion)
+        # Generar recomendación
+        recomendacion = self.generar_recomendacion(estudiante_id, nivel_estres, ansiedad, depresion)
         respuesta_final = f"{respuesta}\n💡 Recomendación: {recomendacion}"
 
-        conv.respuesta_chatbot = respuesta_final
-        self.session.commit()
+        # Actualizar la conversación en Firestore
+        guardar_conversacion(
+            estudiante_id, mensaje, emocion, nivel_estres, ansiedad, depresion, respuesta_final, conv_id
+        )
 
-        # Derivación automática si es de riesgo
+        # Derivación automática
         from utils.derivar_automatico import derivar_si_riesgo
-        respuesta_derivacion = derivar_si_riesgo(conv, self.session)
+        respuesta_derivacion = derivar_si_riesgo(
+            {"id": conv_id, "mensaje": mensaje, "emocion": emocion,
+             "estres": nivel_estres, "ansiedad": ansiedad, "depresion": depresion},
+            None
+        )
+
         if respuesta_derivacion:
-            conv.respuesta_chatbot = f"{respuesta_final}\n⚠️ {respuesta_derivacion}"
-            self.session.commit()
-            respuesta_final = conv.respuesta_chatbot
+            respuesta_final = f"{respuesta_final}\n⚠️ {respuesta_derivacion}"
+            guardar_conversacion(
+                estudiante_id, mensaje, emocion, nivel_estres, ansiedad, depresion, respuesta_final, conv_id
+            )
 
         return {
             "emocion": emocion,
@@ -150,37 +135,38 @@ class ChatbotController:
             "ansiedad": ansiedad,
             "depresion": depresion,
             "respuesta": respuesta_final,
-            "conversacion_id": conv.id
+            "conversacion_id": conv_id
         }
 
     def derivar_a_psicologo(self, conversacion_id, psicologo_id):
-        deriv = Derivacion(
-            conversacion_id=conversacion_id,
-            psicologo_id=psicologo_id,
-            fecha_derivacion=datetime.date.today(),
-            estado="pendiente"
-        )
-        self.session.add(deriv)
-        self.session.commit()
-        return deriv
+        return guardar_derivacion(conversacion_id, psicologo_id)
 
     def obtener_profesionales(self):
-        return self.session.query(Psicologo).all()
+        return obtener_psicologos()
 
     def obtener_conversacion(self, correo_estudiante):
-        estudiante = self.session.query(Estudiante).filter_by(correo=correo_estudiante).first()
+        estudiante = obtener_estudiante_por_correo(correo_estudiante)
         if not estudiante:
             return []
 
-        conversaciones = (
-            self.session.query(Conversacion)
-            .filter_by(estudiante_id=estudiante.id)
-            .order_by(Conversacion.id.asc())
-            .all()
+        # Traer todas las conversaciones del estudiante
+        conversaciones = db.collection("conversaciones") \
+            .where("estudiante_id", "==", estudiante["id"]) \
+            .stream()
+
+        # Convertir a lista y ordenar en Python por timestamp (aware)
+        conversaciones_list = [doc.to_dict() for doc in conversaciones]
+        conversaciones_list.sort(
+            key=lambda x: x.get(
+                "timestamp",
+                datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
+            )
         )
 
+        # Construir la lista de mensajes en orden
         mensajes = []
-        for c in conversaciones:
-            mensajes.append(("Tú", c.mensaje_usuario))
-            mensajes.append(("Bot", c.respuesta_chatbot))
+        for c in conversaciones_list:
+            mensajes.append(("Tú", c.get("mensaje_usuario", "")))
+            mensajes.append(("Bot", c.get("respuesta_chatbot", "")))
+
         return mensajes

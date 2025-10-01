@@ -1,24 +1,15 @@
 # vista/webapp.py
 import sys, os
-import mysql.connector
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from control.chatbot_controller import ChatbotController
 from werkzeug.security import generate_password_hash, check_password_hash
+from modelo.firebase_models import db  # Firestore
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "..", "templates"))
 app.secret_key = "emotibot-secret"  # clave para sesiones
 controller = ChatbotController()
-
-# Conexión a MySQL
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="andreezl13",
-    database="chatbot_db"
-)
-cursor = db.cursor(dictionary=True)
 
 # ---------------- Landing ----------------
 @app.route("/")
@@ -34,18 +25,20 @@ def register():
         carrera = request.form["carrera"]
         password = request.form["password"]
 
-        cursor.execute("SELECT * FROM estudiantes WHERE correo=%s", (correo,))
-        user = cursor.fetchone()
-        if user:
+        # Buscar si ya existe
+        users = db.collection("estudiantes").where("correo", "==", correo).stream()
+        if any(users):
             flash("El correo ya está registrado", "error")
             return render_template("register.html")
 
+        # Guardar con contraseña encriptada
         hashed_password = generate_password_hash(password)
-        cursor.execute(
-            "INSERT INTO estudiantes (nombre, correo, carrera, password) VALUES (%s, %s, %s, %s)",
-            (nombre, correo, carrera, hashed_password)
-        )
-        db.commit()
+        db.collection("estudiantes").add({
+            "nombre": nombre,
+            "correo": correo,
+            "carrera": carrera,
+            "password": hashed_password
+        })
 
         flash("Registro exitoso, ahora inicia sesión", "success")
         return redirect(url_for("login"))
@@ -59,8 +52,12 @@ def login():
         correo = request.form["correo"]
         password = request.form["password"]
 
-        cursor.execute("SELECT * FROM estudiantes WHERE correo=%s", (correo,))
-        user = cursor.fetchone()
+        users = db.collection("estudiantes").where("correo", "==", correo).stream()
+        user = None
+        for u in users:
+            user = u.to_dict()
+            break
+
         if user and check_password_hash(user["password"], password):
             session["correo"] = user["correo"]
             session["nombre"] = user["nombre"]
@@ -72,6 +69,7 @@ def login():
 
     return render_template("login.html")
 
+# ---------------- Chat ----------------
 @app.route("/chat", methods=["GET", "POST"])
 def chat():
     if "correo" not in session:
@@ -85,6 +83,7 @@ def chat():
     mensajes = controller.obtener_conversacion(session["correo"])
     return render_template("chat.html", nombre=session["nombre"], mensajes=mensajes)
 
+# ---------------- Directorio ----------------
 @app.route("/directorio")
 def directorio():
     if "correo" not in session:
@@ -93,6 +92,7 @@ def directorio():
     profesionales = controller.obtener_profesionales()
     return render_template("directorio.html", profesionales=profesionales)
 
+# ---------------- Logout ----------------
 @app.route("/logout")
 def logout():
     session.clear()
