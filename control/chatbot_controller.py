@@ -125,7 +125,8 @@ class ChatbotController:
         from utils.derivar_automatico import derivar_si_riesgo
         respuesta_derivacion = derivar_si_riesgo(
             {"id": conv_id, "mensaje": mensaje, "emocion": emocion,
-             "estres": nivel_estres, "ansiedad": ansiedad, "depresion": depresion},
+            "estres": nivel_estres, "ansiedad": ansiedad, "depresion": depresion,
+            "estudiante_id": estudiante_id},
             None
         )
 
