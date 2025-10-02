@@ -18,7 +18,7 @@ from firebase_admin import credentials, firestore
 
 # Inicializar Firebase
 if not firebase_admin._apps:
-    cred = credentials.Certificate("database/chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")  
+    cred = credentials.Certificate("database/chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
@@ -101,19 +101,25 @@ class ChatbotController:
         nivel_estres = predecir_estres(mensaje)
         ansiedad, depresion = predecir_ansiedad_depresion(mensaje)
 
+        # Verificar cuántas conversaciones previas tiene el estudiante
+        conversaciones_previas = obtener_conversaciones(estudiante_id)
+
         # Guardar conversación inicial
         conv_id = guardar_conversacion(
             estudiante_id, mensaje, emocion, nivel_estres, ansiedad, depresion, respuesta
         )
 
-        # Generar recomendación
-        recomendacion = self.generar_recomendacion(estudiante_id, nivel_estres, ansiedad, depresion)
-        respuesta_final = f"{respuesta}\n💡 Recomendación: {recomendacion}"
+        respuesta_final = respuesta
 
-        # Actualizar la conversación en Firestore
-        guardar_conversacion(
-            estudiante_id, mensaje, emocion, nivel_estres, ansiedad, depresion, respuesta_final, conv_id
-        )
+        # 🔹 Solo generar recomendación si NO es el primer mensaje
+        if len(conversaciones_previas) > 0:
+            recomendacion = self.generar_recomendacion(estudiante_id, nivel_estres, ansiedad, depresion)
+            respuesta_final = f"{respuesta}\n💡 Recomendación: {recomendacion}"
+
+            # Actualizar conversación con recomendación
+            guardar_conversacion(
+                estudiante_id, mensaje, emocion, nivel_estres, ansiedad, depresion, respuesta_final, conv_id
+            )
 
         # Derivación automática
         from utils.derivar_automatico import derivar_si_riesgo
@@ -149,12 +155,10 @@ class ChatbotController:
         if not estudiante:
             return []
 
-        # Traer todas las conversaciones del estudiante
         conversaciones = db.collection("conversaciones") \
             .where("estudiante_id", "==", estudiante["id"]) \
             .stream()
 
-        # Convertir a lista y ordenar en Python por timestamp (aware)
         conversaciones_list = [doc.to_dict() for doc in conversaciones]
         conversaciones_list.sort(
             key=lambda x: x.get(
@@ -163,7 +167,6 @@ class ChatbotController:
             )
         )
 
-        # Construir la lista de mensajes en orden
         mensajes = []
         for c in conversaciones_list:
             mensajes.append(("Tú", c.get("mensaje_usuario", "")))
