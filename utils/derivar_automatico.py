@@ -18,7 +18,6 @@ def derivar_si_riesgo(conversacion, session=None, psicologo_id="default_psicolog
     mensaje = mensaje.lower()
 
     if any(palabra in mensaje for palabra in PALABRAS_RIESGO):
-        datos_anonimos = f"Mensaje de riesgo detectado: {mensaje[:100]}..."
         mensaje_estudiante = (
             "⚠️ Hemos detectado un posible riesgo. "
             "Un especialista revisará tu caso y se contactará contigo si es necesario."
@@ -30,7 +29,6 @@ def derivar_si_riesgo(conversacion, session=None, psicologo_id="default_psicolog
             psicologo_id=psicologo_id,
             estudiante_id=conversacion.get("estudiante_id"),
             mensaje_estudiante=mensaje_estudiante,
-            datos_anonimos=datos_anonimos,
             estado="pendiente"
         )
 
