@@ -78,9 +78,7 @@ def chat():
     if request.method == "POST":
         texto = request.form.get("texto")
         if texto:
-            # 🔹 Aquí ya usamos la respuesta procesada
-            resultado = controller.procesar_mensaje(session["correo"], texto)
-            flash(resultado["respuesta"], "bot")  # opcional: mostrar última respuesta arriba
+            controller.procesar_mensaje(session["correo"], texto)
 
     mensajes = controller.obtener_conversacion(session["correo"])
     return render_template("chat.html", nombre=session["nombre"], mensajes=mensajes)
@@ -101,6 +99,4 @@ def logout():
     return redirect(url_for("login"))
 
 if __name__ == "__main__":
-    # En Render se asigna el puerto con la variable PORT
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(debug=True)
