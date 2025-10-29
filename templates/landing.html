@@ -61,6 +61,18 @@
         box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     }
 
+    .btn-psicologo {
+        background: linear-gradient(90deg, #8E24AA, #6A1B9A); /* tonos morados */
+        color: white;
+        display: block; /* hace que ocupe toda la línea disponible */
+        margin: 15px auto 0 auto; /* separación arriba y centrado */
+    }
+
+    .btn-psicologo:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-20px); }
         to { opacity: 1; transform: translateY(0); }
@@ -69,9 +81,10 @@
 </head>
 <body>
     <div class="card">
-        <h1>Bienvenido a EMOTIBOT</h1>
+        <h1>BIENVENIDO A EMOTIBOT</h1>
         <a href="/register"><button class="btn btn-register">Registrarse</button></a>
         <a href="/login"><button class="btn btn-login">Iniciar Sesión</button></a>
+        <a href="/login_psicologo"><button class="btn btn-psicologo">Panel para Psicólogo</button></a>
     </div>
 </body>
 </html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Historial de Chat - {{ estudiante.nombre }}</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #9FACE6, #74EBD5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .container {
+        background: white;
+        width: 85%;
+        max-width: 950px;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        padding: 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        height: 80vh;
+        animation: fadeIn 1s ease-out;
+    }
+
+    h2 {
+        text-align: center;
+        color: #2E3B75;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .chat-box {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding-right: 10px;
+    }
+
+    .mensaje {
+        padding: 12px 18px;
+        border-radius: 20px;
+        max-width: 70%;
+        word-wrap: break-word;
+        position: relative;
+        font-size: 15px;
+        line-height: 1.4;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .usuario {
+        background-color: #d0e7ff;
+        color: #004085;
+        align-self: flex-start;
+    }
+
+    .bot {
+        background-color: #d4edda;
+        color: #155724;
+        align-self: flex-end;
+    }
+
+    .timestamp {
+        font-size: 0.75em;
+        color: #555;
+        margin-top: 5px;
+    }
+
+    .volver-btn {
+        display: block;
+        width: 160px;
+        margin: 20px auto 0 auto;
+        padding: 10px 15px;
+        text-align: center;
+        background-color: #5C6BC0;
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+    .volver-btn:hover {
+        background-color: #3f51b5;
+        transform: translateY(-2px);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>Historial de Chat - {{ estudiante.nombre }}</h2>
+
+    <div class="chat-box">
+        {% for c in conversaciones %}
+            <div class="mensaje usuario">
+                <strong>Estudiante:</strong> {{ c.mensaje_usuario }}
+                <div class="timestamp">{{ c.fecha }} {{ c.hora }}</div>
+            </div>
+            <div class="mensaje bot">
+                <strong>Bot:</strong> {{ c.respuesta_chatbot }}
+                <div class="timestamp">{{ c.fecha }} {{ c.hora }}</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <a href="{{ url_for('panel_psicologo') }}" class="volver-btn">← Volver al Panel</a>
+</div>
+</body>
+</html>

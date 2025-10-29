@@ -8,8 +8,8 @@ from utils.predict_ansiedad_depresion import predecir_ansiedad_depresion
 from modelo.firebase_models import (
     crear_estudiante, obtener_estudiante_por_correo,
     guardar_conversacion, guardar_recomendacion,
-    guardar_derivacion, obtener_psicologos,
-    obtener_conversaciones
+    guardar_derivacion, crear_psicologo, obtener_psicologo_por_correo,
+    obtener_psicologos, obtener_conversaciones
 )
 import datetime
 import random

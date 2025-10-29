@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Panel del Psicólogo</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #9FACE6, #74EBD5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .container {
+        background: white;
+        width: 90%;
+        max-width: 1450px;
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        padding: 30px;
+        box-sizing: border-box;
+        animation: fadeIn 1s ease-out;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    th, td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #ccc;
+        font-size: 15px;
+    }
+
+    th {
+        background: #5C6BC0;
+        color: white;
+        text-align: center;
+    }
+
+    td {
+        text-align: left;
+    }
+
+    td.centrado {
+        text-align: center;
+    }
+
+    tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .btn-accion {
+        background: #4CAF50;
+        color: white;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .btn-accion:hover {
+        background: #45a049;
+        transform: translateY(-2px);
+    }
+
+    .titulo-panel {
+        display: flex;
+        justify-content: center; /* centramos el span */
+        align-items: center;
+        margin-bottom: 25px;
+        position: relative; /* para posicionar el logout */
+    }
+
+    .titulo-panel span {
+        font-size: 1.8em;
+        color: #2E3B75;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .logout {
+        position: absolute;
+        right: 0;
+        background-color: #c62828;
+        color: white;
+        text-decoration: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: 0.3s;
+    }
+
+    .logout:hover {
+        background-color: #b71c1c;
+    }
+
+    /* Dropdown button */
+    .dropbtn {
+        background-color: #f0ad4e;
+        color: white;
+        padding: 5px 12px;
+        font-size: 14px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: white;
+        min-width: 120px;
+        box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+        border-radius: 5px;
+        z-index: 1;
+    }
+
+    .dropdown-content a {
+        color: black;
+        padding: 8px 12px;
+        text-decoration: none;
+        display: block;
+        font-size: 14px;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #f1f1f1;
+    }
+
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .dropdown:hover .dropbtn {
+        background-color: #ec971f;
+    }
+
+    /* Tabla más compacta para estudiantes */
+    .tabla-estudiantes {
+        width: 60%;       /* ancho menor que la tabla principal */
+        margin: 20px auto; /* centrada horizontalmente */
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="titulo-panel">
+        <span>Panel del Psicólogo</span>
+        <a href="{{ url_for('login_psicologo') }}" class="logout">🚪 Cerrar sesión</a>
+    </div>
+
+    <table>
+        <tr>
+            <th>Estudiante</th>
+            <th>Mensaje</th>
+            <th>Emoción</th>
+            <th>Ansiedad</th>
+            <th>Depresión</th>
+            <th>Derivación</th>
+            <th>Historial</th>
+        </tr>
+
+        {% for c in conversaciones %}
+        <tr>
+            <td>{{ c.estudiante_nombre }}</td>
+            <td>{{ c.mensaje_usuario }}</td>
+            <td class="centrado">{{ c.emocion_detectada | upper }}</td>
+            <td class="centrado">{{ 'Sí' if c.ansiedad == 1 else 'No' }}</td>
+            <td class="centrado">{{ 'Sí' if c.depresion == 1 else 'No' }}</td>
+            
+            <td class="centrado">
+                {% if c.id in deriv_map %}
+                    <div class="dropdown">
+                      <button class="dropbtn">
+                        {{ ESTADO_LABELS.get(c.estado, "Pendiente ⏳") }}
+                      </button>
+                      <div class="dropdown-content">
+                        {% for key, label in ESTADO_LABELS.items() %}
+                        <a href="#" onclick="actualizarEstado('{{ deriv_map[c.id].id }}', '{{ key }}'); return false;">{{ label }}</a>
+                        {% endfor %}
+                      </div>
+                    </div>
+                {% else %}
+                    —  <!-- Sin derivación -->
+                {% endif %}
+            </td>
+
+            <td class="centrado">
+                <a href="{{ url_for('historial_chat', estudiante_id=c.estudiante_id) }}" class="btn-accion">Ver</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <!-- ===== Nueva tabla de Estudiantes ===== -->
+    <h2 style="text-align:center; margin-top:40px; color:#2E3B75;">Lista de Estudiantes</h2>
+    <table class="tabla-estudiantes">
+        <tr>
+            <th>Estudiante</th>
+            <th>Correo</th>
+            <th>Historial</th>
+        </tr>
+        {% for est in estudiantes.values() %}
+        <tr>
+            <td>{{ est.nombre }}</td>
+            <td>{{ est.correo }}</td>
+            <td class="centrado">
+                <a href="{{ url_for('historial_chat', estudiante_id=est.id) }}" class="btn-accion">Ver</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+
+<script>
+    function actualizarEstado(derivacionId, nuevoEstado) {
+        fetch("/actualizar_estado_derivacion", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ id: derivacionId, estado: nuevoEstado })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                alert("Estado actualizado a: " + data.label);
+                location.reload(); // refresca para actualizar el label
+            } else {
+                alert("Error: " + data.msg);
+            }
+        })
+        .catch(err => console.error(err));
+    }
+</script>
+    
+</body>
+</html>

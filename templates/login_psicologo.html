@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>EMOTIBOT - Login Psicólogo</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #9FACE6, #74EBD5); /* Psicología */
+    }
+
+    .box {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,50,0.18);
+        width: 320px;
+        max-width: 90%;
+        animation: fadeIn 1s ease-out;
+        box-sizing: border-box;
+    }
+
+    h2 {
+        margin-bottom: 25px;
+        color: #2E3B75;
+        font-size: 1.8em;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border-radius: 10px;
+        border: 1px solid #bbb;
+        font-size: 15px;
+        transition: all 0.2s;
+        box-sizing: border-box;
+    }
+
+    input:focus {
+        border-color: #5C6BC0;
+        box-shadow: 0 0 8px rgba(92, 107, 192, 0.35);
+        outline: none;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        margin-top: 15px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #5C6BC0, #3949AB);
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+    }
+
+    button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.22);
+    }
+
+    .secondary-btn {
+        background: #ccc;
+        color: #333;
+        margin-top: 10px;
+    }
+    .secondary-btn:hover {
+        background: #bbb;
+    }
+
+    p, a {
+        margin-top: 15px;
+        font-size: 14px;
+        color: #555;
+        text-align: center;
+        text-decoration: none;
+    }
+
+    .error {
+        color: red;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+</head>
+<body>
+<div class="box">
+    <h2>Panel Psicólogo</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <p class="{{ category }}">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="post">
+        <input type="email" name="correo" placeholder="Correo" required>
+        <input type="password" name="password" placeholder="Contraseña" required>
+        <button type="submit">Ingresar</button>
+    </form>
+    <button class="secondary-btn" onclick="window.location.href='/'">Volver al inicio</button>
+</div>
+</body>
+</html>

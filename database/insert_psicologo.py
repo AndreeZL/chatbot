@@ -2,7 +2,7 @@ import os
 import sys
 import firebase_admin
 from firebase_admin import credentials, firestore
-
+from werkzeug.security import generate_password_hash
 # Agregar ruta del proyecto
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -21,7 +21,9 @@ db = firestore.client()
 psicologa = {
     "nombre": "Karolai Alania",
     "especialidad": "Psicología Clínica",
-    "correo": "karolai.alania@continental.edu.pe"
+    "correo": "71696163@continental.edu.pe",
+    "password": generate_password_hash("71696163")
+
 }
 
 db.collection("psicologos").add(psicologa)

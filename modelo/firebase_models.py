@@ -1,18 +1,20 @@
 # modelo/firebase_models.py
 import os
 import datetime
+import pytz
 import firebase_admin
 from firebase_admin import credentials, firestore
+from werkzeug.security import generate_password_hash
 
 # ------------------------------
 # 🔥 Inicialización de Firebase usando variable de entorno
 # ------------------------------
 # Se espera que la variable FIREBASE_CREDENTIALS contenga el JSON de credenciales
-cred_json = os.environ.get("FIREBASE_CREDENTIALS")
+cred_path = os.environ.get("FIREBASE_CREDENTIALS")
 
 if not firebase_admin._apps:
-    if cred_json:
-        cred = credentials.Certificate(eval(cred_json))  # Convertimos string a dict
+    if cred_path:
+        cred = credentials.Certificate(cred_path)
         firebase_admin.initialize_app(cred)
     else:
         raise ValueError("No se encontró la variable de entorno FIREBASE_CREDENTIALS con las credenciales de Firebase.")
@@ -39,36 +41,51 @@ def obtener_estudiante_por_correo(correo):
         return doc.to_dict() | {"id": doc.id}
     return None
 
+def obtener_estudiante_por_id(estudiante_id):
+    doc = db.collection("estudiantes").document(estudiante_id).get()
+    if doc.exists:
+        return doc.to_dict() | {"id": doc.id}
+    return None
+
 def obtener_estudiantes():
     return [doc.to_dict() | {"id": doc.id} for doc in db.collection("estudiantes").stream()]
 
 # ------------------------------
 # 👨‍⚕️ Psicólogo
 # ------------------------------
-def crear_psicologo(nombre, especialidad, correo):
+def crear_psicologo(nombre, especialidad, correo, password):
     doc_ref = db.collection("psicologos").document()
     data = {
         "nombre": nombre,
         "especialidad": especialidad,
-        "correo": correo
+        "correo": correo,
+        "password": generate_password_hash(password)
     }
     doc_ref.set(data)
     return doc_ref.id
 
+def obtener_psicologo_por_correo(correo):
+    query = db.collection("psicologos").where("correo", "==", correo).limit(1).stream()
+    for doc in query:
+        return doc.to_dict() | {"id": doc.id}
+    return None
+
 def obtener_psicologos():
     return [doc.to_dict() | {"id": doc.id} for doc in db.collection("psicologos").stream()]
-
 # ------------------------------
 # 💬 Conversación
 # ------------------------------
 def guardar_conversacion(estudiante_id, mensaje_usuario, emocion_detectada,
                          nivel_estres, ansiedad, depresion, respuesta_chatbot, conv_id=None):
+    tz = pytz.timezone("America/Lima")
+    ahora = datetime.datetime.now(tz)
+
     doc_ref = db.collection("conversaciones").document(conv_id) if conv_id else db.collection("conversaciones").document()
     data = {
         "estudiante_id": estudiante_id,
-        "fecha": datetime.date.today().isoformat(),
-        "hora": datetime.datetime.now().strftime("%H:%M:%S"),
-        "timestamp": datetime.datetime.now(),
+        "fecha": ahora.date().isoformat(),
+        "hora": ahora.strftime("%H:%M:%S"),
+        "timestamp": ahora,
         "mensaje_usuario": mensaje_usuario,
         "emocion_detectada": emocion_detectada,
         "nivel_estres": nivel_estres,
@@ -88,7 +105,19 @@ def obtener_conversaciones(estudiante_id=None):
 # ------------------------------
 # 📌 Derivación
 # ------------------------------
+# Estados válidos de derivación
+ESTADOS_DERIVACION = ("pendiente", "completada")
+
+# Etiquetas amigables para mostrar en la UI
+ESTADO_LABELS = {
+    "pendiente": "Pendiente ⏳",
+    "completada": "Completada ✅",
+}
 def guardar_derivacion(conversacion_id, psicologo_id, estudiante_id=None, mensaje_estudiante=None, estado="pendiente"):
+    # Validar que el estado sea válido
+    if estado not in ESTADOS_DERIVACION:
+        raise ValueError(f"Estado inválido: {estado}")
+    
     doc_ref = db.collection("derivaciones").document()
     data = {
         "conversacion_id": conversacion_id,
@@ -102,7 +131,8 @@ def guardar_derivacion(conversacion_id, psicologo_id, estudiante_id=None, mensaj
     return doc_ref.id
 
 def obtener_derivaciones():
-    return [doc.to_dict() | {"id": doc.id} for doc in db.collection("derivaciones").stream()]
+    docs = db.collection("derivaciones").stream()
+    return [{"id": d.id, **d.to_dict()} for d in docs]
 
 # ------------------------------
 # 🎯 Recomendación
