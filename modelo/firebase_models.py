@@ -1,6 +1,7 @@
 # modelo/firebase_models.py
 import os
 import datetime
+from flask import json
 import pytz
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -9,15 +10,21 @@ from werkzeug.security import generate_password_hash
 # ------------------------------
 # 🔥 Inicialización de Firebase usando variable de entorno
 # ------------------------------
-# Se espera que la variable FIREBASE_CREDENTIALS contenga el JSON de credenciales
-cred_path = os.environ.get("FIREBASE_CREDENTIALS")
+cred_env = os.environ.get("FIREBASE_CREDENTIALS")
 
 if not firebase_admin._apps:
-    if cred_path:
-        cred = credentials.Certificate(cred_path)
-        firebase_admin.initialize_app(cred)
+    if cred_env:
+        try:
+            # Si es un JSON (Render u otro servicio en la nube)
+            cred_dict = json.loads(cred_env)
+            cred = credentials.Certificate(cred_dict)
+        except json.JSONDecodeError:
+            # Si no es JSON, asumimos que es la ruta al archivo local
+            cred = credentials.Certificate(cred_env)
     else:
-        raise ValueError("No se encontró la variable de entorno FIREBASE_CREDENTIALS con las credenciales de Firebase.")
+        raise ValueError("⚠️ No se encontró la variable FIREBASE_CREDENTIALS con las credenciales de Firebase.")
+    
+    firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
