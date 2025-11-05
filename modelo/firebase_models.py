@@ -4,9 +4,9 @@ import datetime
 from flask import json
 import pytz
 import firebase_admin
+import json
 from firebase_admin import credentials, firestore
 from werkzeug.security import generate_password_hash
-
 # ------------------------------
 # 🔥 Inicialización de Firebase usando variable de entorno
 # ------------------------------
@@ -18,12 +18,20 @@ if not firebase_admin._apps:
             # Si es un JSON (Render u otro servicio en la nube)
             cred_dict = json.loads(cred_env)
             cred = credentials.Certificate(cred_dict)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
             # Si no es JSON, asumimos que es la ruta al archivo local
-            cred = credentials.Certificate(cred_env)
+            print("⚠️ Error cargando credenciales desde variable de entorno:", e)
+            print("🔍 Intentando usar archivo local...")
+            cred_path = "database/chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json"
+            cred = credentials.Certificate(cred_path)
+        except Exception as e:
+            print("❌ Error general al cargar credenciales Firebase:", e)
+            raise
     else:
-        raise ValueError("⚠️ No se encontró la variable FIREBASE_CREDENTIALS con las credenciales de Firebase.")
-    
+        print("⚠️ No se encontró FIREBASE_CREDENTIALS, usando archivo local...")
+        cred_path = "database/chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json"
+        cred = credentials.Certificate(cred_path)
+
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()

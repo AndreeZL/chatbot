@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <title>EmotiBot - Chat</title>
 <style>
+    :root {
+        --verde-menta: #A8E6CF;
+        --verde-oscuro: #379683;
+        --azul-claro: #B2EBF2;
+        --gris-claro: #F7F7F7;
+        --gris-texto: #444;
+        --verde-boton: #3FB984;
+        --verde-hover: #2F9E6E;
+    }
+
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         margin: 0;
@@ -11,13 +21,14 @@
         display: flex;
         flex-direction: column;
         height: 100vh;
-        background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+        background: linear-gradient(135deg, var(--azul-claro), var(--verde-menta));
         overflow: hidden;
+        color: var(--gris-texto);
     }
 
     /* Header */
     header {
-        background: #4CAF50;
+        background: var(--verde-oscuro);
         color: white;
         padding: 15px 20px;
         display: flex;
@@ -29,7 +40,7 @@
     }
     header h2 {
         margin: 0;
-        font-size: 25px;
+        font-size: 23px;
         flex: 1;
         text-align: center;
     }
@@ -41,7 +52,7 @@
         cursor: pointer;
     }
     .logout {
-        background-color: #c62828;
+        background-color: #d9534f;
         color: white;
         text-decoration: none;
         padding: 8px 15px;
@@ -49,7 +60,7 @@
         font-size: 14px;
         transition: 0.3s;
     }
-    .logout:hover { background-color: #b71c1c; }
+    .logout:hover { background-color: #c9302c; }
 
     /* Sidebar */
     .sidebar {
@@ -58,14 +69,14 @@
         position: fixed;
         top: 0;
         left: 0;
-        background-color: #11852e;
+        background-color: var(--verde-oscuro);
         overflow-x: hidden;
         transition: 0.3s;
         padding-top: 60px;
         display: flex;
         flex-direction: column;
         z-index: 1000;
-        border-right: 2px solid #0a3f12;
+        border-right: 2px solid rgba(0,0,0,0.1);
     }
     .sidebar a {
         padding: 15px 25px;
@@ -76,7 +87,7 @@
         transition: 0.2s;
         border-bottom: 1px solid rgba(255,255,255,0.1);
     }
-    .sidebar a:hover { background-color: #084b0f; }
+    .sidebar a:hover { background-color: #2e6e63; }
 
     /* Chat container */
     .chat-container {
@@ -87,26 +98,27 @@
         flex-direction: column;
         margin-left: 0;
         transition: margin-left 0.3s;
+        background-color: rgba(255,255,255,0.5);
+        backdrop-filter: blur(6px);
     }
 
     .mensaje {
         max-width: 70%;
         padding: 12px 18px;
-        margin: 6px 0;
+        margin: 8px 0;
         border-radius: 20px;
         line-height: 1.5;
         box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         word-wrap: break-word;
         font-size: 15px;
-        transition: all 0.2s;
     }
     .usuario {
-        background: #DCF8C6;
+        background: #C8E6C9;
         align-self: flex-end;
         border-bottom-right-radius: 0;
     }
     .bot {
-        background: #E5E5EA;
+        background: #E3F2FD;
         align-self: flex-start;
         border-bottom-left-radius: 0;
     }
@@ -115,7 +127,7 @@
     form {
         display: flex;
         padding: 15px;
-        background: #fff;
+        background: var(--gris-claro);
         border-top: 1px solid #ccc;
     }
     input[type="text"] {
@@ -128,11 +140,11 @@
         transition: all 0.2s;
     }
     input[type="text"]:focus {
-        border-color: #4CAF50;
-        box-shadow: 0 0 8px rgba(76,175,80,0.3);
+        border-color: var(--verde-boton);
+        box-shadow: 0 0 8px rgba(63,185,132,0.3);
     }
     button {
-        background: #4CAF50;
+        background: var(--verde-boton);
         border: none;
         color: white;
         padding: 12px 20px;
@@ -140,9 +152,9 @@
         border-radius: 25px;
         cursor: pointer;
         font-weight: bold;
-        transition: all 0.3s;
+        transition: 0.3s;
     }
-    button:hover { background: #45a049; }
+    button:hover { background: var(--verde-hover); }
 
     /* Scrollbar personalizado */
     .chat-container::-webkit-scrollbar {
@@ -151,9 +163,6 @@
     .chat-container::-webkit-scrollbar-thumb {
         background: rgba(0,0,0,0.2);
         border-radius: 4px;
-    }
-    .chat-container::-webkit-scrollbar-track {
-        background: transparent;
     }
 
 </style>
@@ -167,7 +176,9 @@
 <!-- Header -->
 <header>
   <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-  <h2>👋 Hola {{ nombre }}, bienvenido a EmotiBot</h2>
+  <h2>
+    🌱 Bienvenido(a) {{ nombre }} a EmotiBot
+  </h2>
   <a href="{{ url_for('logout') }}" class="logout">🚪 Cerrar sesión</a>
 </header>
 
@@ -199,7 +210,6 @@
     }
   }
 
-  // Cerrar sidebar al hacer clic fuera
   window.onclick = function(event) {
     let sidebar = document.getElementById("sidebar");
     if (!event.target.matches('.menu-btn') && sidebar.style.width === "250px") {
@@ -208,7 +218,6 @@
     }
   }
 
-  // Scroll automático al final del chat
   let chatContainer = document.getElementById("chat");
   chatContainer.scrollTop = chatContainer.scrollHeight;
 </script>

@@ -4,15 +4,27 @@
 <meta charset="UTF-8">
 <title>Panel del Psicólogo</title>
 <style>
+    :root {
+        --verde-menta: #A8E6CF;
+        --verde-oscuro: #379683;
+        --azul-claro: #B2EBF2;
+        --azul-profundo: #355C7D;
+        --gris-suave: #f8f9fa;
+        --rojo-alerta: #c62828;
+        --rojo-hover: #b71c1c;
+        --amarillo: #f0ad4e;
+    }
+
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         margin: 0;
         padding: 0;
-        background: linear-gradient(135deg, #9FACE6, #74EBD5);
+        background: linear-gradient(135deg, var(--azul-claro), var(--verde-menta));
         display: flex;
         justify-content: center;
         align-items: center;
         min-height: 100vh;
+        color: #333;
     }
 
     .container {
@@ -20,96 +32,103 @@
         width: 90%;
         max-width: 1450px;
         border-radius: 20px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        padding: 30px 40px;
         box-sizing: border-box;
-        animation: fadeIn 1s ease-out;
+        animation: fadeIn 0.8s ease-out;
     }
 
+    .titulo-panel {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 25px;
+        position: relative;
+    }
+
+    .titulo-panel span {
+        font-size: 1.9em;
+        color: var(--azul-profundo);
+        text-align: center;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+    }
+
+    .logout {
+        position: absolute;
+        right: 0;
+        background-color: var(--rojo-alerta);
+        color: white;
+        text-decoration: none;
+        padding: 9px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+    .logout:hover { background-color: var(--rojo-hover); }
+
+    /* Tabla principal */
     table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
+        border-radius: 10px;
+        overflow: hidden;
     }
 
     th, td {
         padding: 12px 15px;
-        border-bottom: 1px solid #ccc;
         font-size: 15px;
     }
 
     th {
-        background: #5C6BC0;
+        background: var(--azul-profundo);
         color: white;
         text-align: center;
+        font-weight: 600;
     }
 
     td {
         text-align: left;
+        border-bottom: 1px solid #ddd;
     }
 
     td.centrado {
         text-align: center;
     }
 
+    tr:nth-child(even) { background: var(--gris-suave); }
+
     tr:hover {
-        background-color: #f1f1f1;
+        background-color: rgba(55,150,131,0.15);
+        transition: 0.2s;
     }
 
     .btn-accion {
-        background: #4CAF50;
+        background: var(--verde-oscuro);
         color: white;
         padding: 8px 14px;
         border-radius: 10px;
         font-weight: bold;
         text-decoration: none;
         transition: all 0.3s;
+        font-size: 14px;
     }
     .btn-accion:hover {
-        background: #45a049;
+        background: #2c7768;
         transform: translateY(-2px);
     }
 
-    .titulo-panel {
-        display: flex;
-        justify-content: center; /* centramos el span */
-        align-items: center;
-        margin-bottom: 25px;
-        position: relative; /* para posicionar el logout */
-    }
-
-    .titulo-panel span {
-        font-size: 1.8em;
-        color: #2E3B75;
-        text-align: center;
-        font-weight: bold;
-    }
-
-    .logout {
-        position: absolute;
-        right: 0;
-        background-color: #c62828;
-        color: white;
-        text-decoration: none;
-        padding: 8px 15px;
-        border-radius: 5px;
-        font-size: 14px;
-        transition: 0.3s;
-    }
-
-    .logout:hover {
-        background-color: #b71c1c;
-    }
-
-    /* Dropdown button */
+    /* Dropdown derivación */
     .dropbtn {
-        background-color: #f0ad4e;
+        background-color: var(--amarillo);
         color: white;
-        padding: 5px 12px;
-        font-size: 14px;
+        padding: 6px 12px;
+        font-size: 13px;
         border: none;
-        border-radius: 5px;
+        border-radius: 6px;
         cursor: pointer;
+        transition: all 0.2s;
     }
 
     .dropdown {
@@ -121,40 +140,46 @@
         display: none;
         position: absolute;
         background-color: white;
-        min-width: 120px;
-        box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-        border-radius: 5px;
+        min-width: 140px;
+        box-shadow: 0px 6px 16px rgba(0,0,0,0.2);
+        border-radius: 8px;
         z-index: 1;
+        overflow: hidden;
     }
 
     .dropdown-content a {
-        color: black;
-        padding: 8px 12px;
+        color: #333;
+        padding: 10px 12px;
         text-decoration: none;
         display: block;
         font-size: 14px;
+        transition: 0.2s;
     }
 
     .dropdown-content a:hover {
         background-color: #f1f1f1;
     }
 
-    .dropdown:hover .dropdown-content {
-        display: block;
-    }
+    .dropdown:hover .dropdown-content { display: block; }
+    .dropdown:hover .dropbtn { background-color: #ec971f; }
 
-    .dropdown:hover .dropbtn {
-        background-color: #ec971f;
-    }
-
-    /* Tabla más compacta para estudiantes */
+    /* Subtabla de estudiantes */
     .tabla-estudiantes {
-        width: 60%;       /* ancho menor que la tabla principal */
-        margin: 20px auto; /* centrada horizontalmente */
+        width: 70%;
+        margin: 25px auto;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    h2 {
+        text-align: center;
+        color: var(--azul-profundo);
+        margin-top: 40px;
+        font-size: 1.6em;
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(-20px); }
+        from { opacity: 0; transform: translateY(-15px); }
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
@@ -162,8 +187,8 @@
 <body>
 <div class="container">
     <div class="titulo-panel">
-        <span>Panel del Psicólogo</span>
-        <a href="{{ url_for('login_psicologo') }}" class="logout">🚪 Cerrar sesión</a>
+        <span>🧠 Panel del Psicólogo</span>
+        <a href="{{ url_for('login_psicologo') }}" class="logout">Cerrar sesión</a>
     </div>
 
     <table>
@@ -184,7 +209,6 @@
             <td class="centrado">{{ c.emocion_detectada | upper }}</td>
             <td class="centrado">{{ 'Sí' if c.ansiedad == 1 else 'No' }}</td>
             <td class="centrado">{{ 'Sí' if c.depresion == 1 else 'No' }}</td>
-            
             <td class="centrado">
                 {% if c.id in deriv_map %}
                     <div class="dropdown">
@@ -198,19 +222,17 @@
                       </div>
                     </div>
                 {% else %}
-                    —  <!-- Sin derivación -->
+                    —
                 {% endif %}
             </td>
-
             <td class="centrado">
                 <a href="{{ url_for('historial_chat', estudiante_id=c.estudiante_id) }}" class="btn-accion">Ver</a>
             </td>
         </tr>
         {% endfor %}
     </table>
-    
-    <!-- ===== Nueva tabla de Estudiantes ===== -->
-    <h2 style="text-align:center; margin-top:40px; color:#2E3B75;">Lista de Estudiantes</h2>
+
+    <h2>Lista de Estudiantes</h2>
     <table class="tabla-estudiantes">
         <tr>
             <th>Estudiante</th>
@@ -227,24 +249,20 @@
         </tr>
         {% endfor %}
     </table>
-
 </div>
-
 
 <script>
     function actualizarEstado(derivacionId, nuevoEstado) {
         fetch("/actualizar_estado_derivacion", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: derivacionId, estado: nuevoEstado })
         })
         .then(res => res.json())
         .then(data => {
-            if(data.success) {
+            if (data.success) {
                 alert("Estado actualizado a: " + data.label);
-                location.reload(); // refresca para actualizar el label
+                location.reload();
             } else {
                 alert("Error: " + data.msg);
             }
@@ -252,6 +270,5 @@
         .catch(err => console.error(err));
     }
 </script>
-    
 </body>
 </html>
