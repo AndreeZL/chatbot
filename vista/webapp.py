@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from modelo.firebase_models import db, obtener_derivaciones, obtener_estudiante_por_correo, obtener_estudiante_por_id  # Firestore
 from modelo.firebase_models import obtener_conversaciones, obtener_estudiantes, ESTADO_LABELS
 
-app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "..", "templates"))
+app = Flask(__name__, template_folder="templates")
 app.secret_key = "emotibot-secret"  # clave para sesiones
 controller = ChatbotController()
 

@@ -2,7 +2,7 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from chatbot_repo.chatbot import detectar_emocion, obtener_respuesta
+from modelo.chatbot import detectar_emocion, obtener_respuesta
 from utils.predict_stress import predecir_estres
 from utils.predict_ansiedad_depresion import predecir_ansiedad_depresion
 from modelo.firebase_models import (
