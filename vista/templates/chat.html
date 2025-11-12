@@ -168,6 +168,7 @@
 </style>
 </head>
 <body>
+
 <!-- Sidebar -->
 <div id="sidebar" class="sidebar">
   <a href="{{ url_for('directorio') }}">📖 Directorio</a>
@@ -176,9 +177,7 @@
 <!-- Header -->
 <header>
   <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-  <h2>
-    🌱 Bienvenido(a) {{ nombre }} a EmotiBot
-  </h2>
+  <h2>🌱 Bienvenido(a) {{ nombre }} a EmotiBot</h2>
   <a href="{{ url_for('logout') }}" class="logout">🚪 Cerrar sesión</a>
 </header>
 
@@ -192,7 +191,7 @@
 </div>
 
 <!-- Formulario -->
-<form method="POST">
+<form method="POST" action="{{ url_for('chat') }}">
   <input type="text" name="texto" placeholder="Escribe tu mensaje aquí..." required autofocus>
   <button type="submit">Enviar</button>
 </form>

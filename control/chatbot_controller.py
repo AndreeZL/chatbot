@@ -2,19 +2,22 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from modelo.chatbot import detectar_emocion, obtener_respuesta
-from utils.predict_stress import predecir_estres
-from utils.predict_ansiedad_depresion import predecir_ansiedad_depresion
-from modelo.firebase_models import (
-    crear_estudiante, obtener_estudiante_por_correo,
-    guardar_conversacion, guardar_recomendacion,
-    guardar_derivacion, crear_psicologo, obtener_psicologo_por_correo,
-    obtener_psicologos, obtener_conversaciones
-)
 import datetime
 import random
 import firebase_admin
 from firebase_admin import credentials, firestore
+
+from modelo.chatbot import detectar_emocion
+from utils.predict_stress import predecir_estres
+from utils.predict_ansiedad_depresion import predecir_ansiedad_depresion
+from utils.openrouter_api import obtener_respuesta_openrouter
+from utils.derivar_automatico import derivar_si_riesgo
+from modelo.firebase_models import (
+    crear_estudiante, obtener_estudiante_por_correo,
+    guardar_conversacion, guardar_recomendacion,
+    guardar_derivacion, obtener_psicologos,
+    obtener_conversaciones
+)
 
 # Inicializar Firebase
 if not firebase_admin._apps:
@@ -24,120 +27,156 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 class ChatbotController:
-    def registrar_estudiante(self, nombre, correo, carrera):
-        estudiante = obtener_estudiante_por_correo(correo)
-        if not estudiante:
-            estudiante_id = crear_estudiante(nombre, correo, carrera)
-            print(f"✅ Estudiante registrado en Firestore: {nombre} ({correo}) {carrera}")
-            return {"id": estudiante_id, "nombre": nombre, "correo": correo, "carrera": carrera}
-        return estudiante
 
-    def generar_recomendacion(self, estudiante_id, nivel_estres, ansiedad, depresion):
+    # -------------------------------------------------------------------------
+    # REGISTRO DE ESTUDIANTE
+    # -------------------------------------------------------------------------
+    def registrar_estudiante(self, nombre: str, correo: str, carrera: str) -> dict:
+        estudiante = obtener_estudiante_por_correo(correo)
+        if estudiante:
+            return estudiante
+
+        estudiante_id = crear_estudiante(nombre, correo, carrera)
+        return {
+            "id": estudiante_id,
+            "nombre": nombre,
+            "correo": correo,
+            "carrera": carrera
+        }
+
+    # -------------------------------------------------------------------------
+    # GENERADOR DE RECOMENDACIONES
+    # -------------------------------------------------------------------------
+    def generar_recomendacion(self, estudiante_id: str, nivel_estres: str, ansiedad: bool, depresion: bool) -> str:
         opciones = []
 
         # Estrés
         if nivel_estres == "alto":
-            opciones.extend([
-                "Intenta hacer ejercicios de respiración profunda durante 5 minutos.",
-                "Tómate un descanso corto y escucha música relajante.",
-                "Escribe tus pensamientos en un diario para liberar tensión."
-            ])
+            opciones += [
+                "Haz ejercicios de respiración profunda durante 5 minutos.",
+                "Escucha música relajante.",
+                "Escribe tus pensamientos para liberar tensión."
+            ]
         elif nivel_estres == "medio":
-            opciones.extend([
-                "Realiza una caminata corta para despejar tu mente.",
-                "Prueba técnicas de mindfulness por unos minutos.",
-                "Organiza tus tareas para reducir la presión."
-            ])
-        else:  # bajo
-            opciones.extend([
-                "Mantén tu rutina positiva y aprovecha el momento.",
-                "Comparte tu tiempo libre con amigos o familia.",
-                "Continúa con tus actividades que te hagan sentir bien."
-            ])
+            opciones += [
+                "Da una caminata corta para despejar tu mente.",
+                "Prueba una breve sesión de mindfulness.",
+                "Organiza tus tareas pendientes para reducir la carga mental."
+            ]
+        else:
+            opciones += [
+                "Mantén tus hábitos saludables y tu rutina positiva.",
+                "Comparte tiempo con amigos o familia.",
+                "Continúa con actividades que disfrutes."
+            ]
 
-        # Ansiedad
+        # Ansiedad y Depresión
         if ansiedad:
-            opciones.extend([
-                "Respira profundamente y cuenta hasta 10.",
-                "Habla con alguien de confianza sobre lo que sientes.",
-                "Realiza un ejercicio de relajación muscular progresiva."
-            ])
-
-        # Depresión
+            opciones += [
+                "Practica respiración profunda y pausada.",
+                "Habla con alguien de confianza sobre cómo te sientes.",
+                "Realiza ejercicios de relajación muscular progresiva."
+            ]
         if depresion:
-            opciones.extend([
-                "Intenta realizar una actividad que normalmente disfrutes.",
-                "Sal a dar un paseo al aire libre, aunque sea corto.",
-                "Busca apoyo de un amigo o familiar cercano."
-            ])
+            opciones += [
+                "Haz una actividad que disfrutes, aunque sea pequeña.",
+                "Sal a caminar para conectar con el entorno.",
+                "Busca apoyo emocional en personas cercanas."
+            ]
 
         if not opciones:
-            opciones.append("Mantén una actitud positiva y cuida tu bienestar diario.")
+            opciones = ["Mantén una actitud positiva y cuida tu bienestar."]
 
         recomendacion = random.choice(opciones)
-
-        # Guardar en Firestore
         guardar_recomendacion(estudiante_id, recomendacion)
-
         return recomendacion
 
-    def procesar_mensaje(self, correo_estudiante, mensaje):
-        despedidas = ["chao", "adios", "adiós", "salir", "eso es todo"]
-
-        if mensaje.lower().strip() in despedidas:
-            emocion = "despedida"
-            respuesta = "👋 Nos vemos, recuerda que siempre estaré aquí para ti."
-        else:
-            emocion = detectar_emocion(mensaje)
-            respuesta = obtener_respuesta(emocion)
+    # -------------------------------------------------------------------------
+    # PROCESAMIENTO DE MENSAJES
+    # -------------------------------------------------------------------------
+    def procesar_mensaje(self, correo_estudiante: str, mensaje: str) -> dict:
+        despedidas = {"chao", "adios", "adiós", "salir", "eso es todo"}
+        mensaje_limpio = mensaje.lower().strip()
 
         estudiante = obtener_estudiante_por_correo(correo_estudiante)
         if not estudiante:
-            raise ValueError("El estudiante no está registrado.")
-
+            raise ValueError("❌ Estudiante no registrado en la base de datos.")
         estudiante_id = estudiante["id"]
 
-        # Predicciones automáticas
+        # --- Si el usuario se despide ---
+        if mensaje_limpio in despedidas:
+            return {
+                "emocion": "despedida",
+                "nivel_estres": None,
+                "ansiedad": None,
+                "depresion": None,
+                "respuesta": "👋 Nos vemos pronto, recuerda que siempre estaré aquí para escucharte.",
+                "conversacion_id": None
+            }
+
+        # --- Historial de conversaciones previas ---
+        conversaciones_previas = obtener_conversaciones(estudiante_id)
+        historial = [
+            (c.get("mensaje_usuario", ""), c.get("respuesta_chatbot", ""))
+            for c in conversaciones_previas[-4:]
+        ]
+
+        # --- Detección de emociones ---
+        emociones_detectadas = detectar_emocion(mensaje)
+        if isinstance(emociones_detectadas, list):
+            emociones_str = ",".join(emociones_detectadas)
+            emociones_cod = [self.codificar_emocion(e) for e in emociones_detectadas]
+        else:
+            emociones_str = emociones_detectadas
+            emociones_cod = [self.codificar_emocion(emociones_detectadas)]
+
+        # --- Respuesta OpenRouter ---
+        try:
+            respuesta = obtener_respuesta_openrouter(mensaje, historial)
+        except Exception as e:
+            print(f"[ERROR] OpenRouter API falló: {e}")
+            respuesta = "Lo siento, tuve un pequeño problema para responder. ¿Podrías repetirlo?"
+
+        # --- Predicciones de estrés, ansiedad y depresión ---
         nivel_estres = predecir_estres(mensaje)
         ansiedad, depresion = predecir_ansiedad_depresion(mensaje)
 
-        # Verificar cuántas conversaciones previas tiene el estudiante
-        conversaciones_previas = obtener_conversaciones(estudiante_id)
-
-        # Guardar conversación inicial
+        # --- Guardar conversación en Firebase ---
         conv_id = guardar_conversacion(
-            estudiante_id, mensaje, emocion, nivel_estres, ansiedad, depresion, respuesta
+            estudiante_id, mensaje, emociones_str, nivel_estres, ansiedad, depresion, respuesta
         )
 
+        # --- Generar recomendación si hay riesgo ---
         respuesta_final = respuesta
-
-        # 🔹 Solo generar recomendación si NO es el primer mensaje
-        if len(conversaciones_previas) > 0:
+        if nivel_estres != "bajo" or ansiedad or depresion:
             recomendacion = self.generar_recomendacion(estudiante_id, nivel_estres, ansiedad, depresion)
-            respuesta_final = f"{respuesta}\n💡 Recomendación: {recomendacion}"
+            respuesta_final = f"{respuesta}\n\n💡 *Recomendación:* {recomendacion}"
 
-            # Actualizar conversación con recomendación
+            # Actualizar Firebase con la recomendación
             guardar_conversacion(
-                estudiante_id, mensaje, emocion, nivel_estres, ansiedad, depresion, respuesta_final, conv_id
+                estudiante_id, mensaje, emociones_str, nivel_estres, ansiedad, depresion, respuesta_final, conv_id
             )
 
-        # Derivación automática
-        from utils.derivar_automatico import derivar_si_riesgo
-        respuesta_derivacion = derivar_si_riesgo(
-            {"id": conv_id, "mensaje": mensaje, "emocion": emocion,
-            "estres": nivel_estres, "ansiedad": ansiedad, "depresion": depresion,
-            "estudiante_id": estudiante_id},
-            None
-        )
+        # --- Evaluar derivación a psicólogo ---
+        derivacion_msg = derivar_si_riesgo({
+            "id": conv_id,
+            "mensaje": mensaje,
+            "emocion": emociones_str,
+            "estres": nivel_estres,
+            "ansiedad": ansiedad,
+            "depresion": depresion,
+            "estudiante_id": estudiante_id
+        }, None)
 
-        if respuesta_derivacion:
-            respuesta_final = f"{respuesta_final}\n⚠️ {respuesta_derivacion}"
+        if derivacion_msg:
+            respuesta_final += f"\n⚠️ {derivacion_msg}"
             guardar_conversacion(
-                estudiante_id, mensaje, emocion, nivel_estres, ansiedad, depresion, respuesta_final, conv_id
+                estudiante_id, mensaje, emociones_str, nivel_estres, ansiedad, depresion, respuesta_final, conv_id
             )
 
         return {
-            "emocion": emocion,
+            "emocion": emociones_str,
+            "emocion_cod": emociones_cod,
             "nivel_estres": nivel_estres,
             "ansiedad": ansiedad,
             "depresion": depresion,
@@ -145,32 +184,44 @@ class ChatbotController:
             "conversacion_id": conv_id
         }
 
-    def derivar_a_psicologo(self, conversacion_id, psicologo_id):
+    # -------------------------------------------------------------------------
+    # DERIVACIÓN Y CONSULTAS
+    # -------------------------------------------------------------------------
+    def derivar_a_psicologo(self, conversacion_id: str, psicologo_id: str) -> bool:
         return guardar_derivacion(conversacion_id, psicologo_id)
 
-    def obtener_profesionales(self):
+    def obtener_profesionales(self) -> list:
         return obtener_psicologos()
 
-    def obtener_conversacion(self, correo_estudiante):
+    def obtener_conversacion(self, correo_estudiante: str) -> list:
         estudiante = obtener_estudiante_por_correo(correo_estudiante)
         if not estudiante:
             return []
 
-        conversaciones = db.collection("conversaciones") \
-            .where("estudiante_id", "==", estudiante["id"]) \
-            .stream()
-
-        conversaciones_list = [doc.to_dict() for doc in conversaciones]
-        conversaciones_list.sort(
-            key=lambda x: x.get(
-                "timestamp",
-                datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
-            )
+        conversaciones = obtener_conversaciones(estudiante["id"])
+        conversaciones.sort(
+            key=lambda c: c.get("timestamp", datetime.datetime.min.replace(tzinfo=datetime.timezone.utc))
         )
 
         mensajes = []
-        for c in conversaciones_list:
+        for c in conversaciones:
             mensajes.append(("Tú", c.get("mensaje_usuario", "")))
             mensajes.append(("Bot", c.get("respuesta_chatbot", "")))
 
         return mensajes
+
+    # -------------------------------------------------------------------------
+    # CODIFICACIÓN NUMÉRICA DE EMOCIONES
+    # -------------------------------------------------------------------------
+    def codificar_emocion(self, emocion: str) -> int:
+        mapping = {
+            "alegria": 1,
+            "tristeza": 2,
+            "miedo": 3,
+            "enojo": 4,
+            "sorpresa": 5,
+            "ansiedad": 6,
+            "neutral": 0,
+            "despedida": 9
+        }
+        return mapping.get(emocion.lower(), 99)

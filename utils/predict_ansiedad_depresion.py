@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import joblib
 import os
 
@@ -16,6 +17,28 @@ def predecir_ansiedad_depresion(texto):
     return int(pred[0]), int(pred[1])
 
 # Funciones individuales para importación separada
+=======
+# utils/predict_ansiedad_depresion.py
+
+import joblib
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+modelo_path = os.path.join(BASE_DIR, "modelo", "modelo_ansiedad_depresion.pkl")
+vectorizador_path = os.path.join(BASE_DIR, "modelo", "vectorizer_ansiedad_depresion.pkl")
+
+clf = joblib.load(modelo_path)
+vectorizer = joblib.load(vectorizador_path)
+
+def predecir_ansiedad_depresion(texto):
+    """
+    Devuelve dos valores: ansiedad (0 o 1) y depresión (0 o 1)
+    """
+    X = vectorizer.transform([texto])
+    pred = clf.predict(X)[0]
+    return int(pred[0]), int(pred[1])
+
+>>>>>>> 2dde462 (UML AGREGADO)
 def predecir_ansiedad(texto):
     return predecir_ansiedad_depresion(texto)[0]
 
