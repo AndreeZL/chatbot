@@ -2,8 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-# Firebase credentials
-chatbot-78eec-firebase-adminsdk-*.json
+
 .env
 # --- Entornos virtuales ---
 venv/
@@ -41,4 +40,3 @@ htmlcov/
 dist/
 build/
 
-database/chatbot-78eec-firebase-adminsdk-fbsvc-09d157af1f.json

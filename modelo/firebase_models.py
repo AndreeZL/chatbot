@@ -11,19 +11,32 @@ from werkzeug.security import generate_password_hash
 # ============================================================
 # 🔥 Inicialización de Firebase
 # ============================================================
+
+# Directorio base del script
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Intentar usar variable de entorno
 cred_env = os.environ.get("FIREBASE_CREDENTIALS")
 
 if not firebase_admin._apps:
     if cred_env:
         try:
+            # Si la variable es JSON completo
             cred_dict = json.loads(cred_env)
             cred = credentials.Certificate(cred_dict)
         except json.JSONDecodeError:
-            print("⚠️ FIREBASE_CREDENTIALS no es JSON, usando archivo local...")
-            cred = credentials.Certificate("database/chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")
+            # Si la variable es ruta a archivo
+            if os.path.isfile(cred_env):
+                cred = credentials.Certificate(cred_env)
+            else:
+                print("⚠️ FIREBASE_CREDENTIALS no válido, usando archivo local...")
+                json_path = os.path.join(BASE_DIR, "chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")
+                cred = credentials.Certificate(json_path)
     else:
+        # Usar archivo local
         print("⚠️ No se encontró FIREBASE_CREDENTIALS, usando archivo local...")
-        cred = credentials.Certificate("database/chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")
+        json_path = os.path.join(BASE_DIR, "chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")
+        cred = credentials.Certificate(json_path)
 
     firebase_admin.initialize_app(cred)
 
@@ -33,6 +46,7 @@ tz = pytz.timezone("America/Lima")
 # ============================================================
 # 👤 ESTUDIANTES
 # ============================================================
+
 def crear_estudiante(nombre, correo, carrera):
     doc_ref = db.collection("estudiantes").document()
     data = {
@@ -62,6 +76,7 @@ def obtener_estudiantes():
 # ============================================================
 # 👨‍⚕️ PSICÓLOGOS
 # ============================================================
+
 def crear_psicologo(nombre, especialidad, correo, password):
     doc_ref = db.collection("psicologos").document()
     data = {
@@ -86,19 +101,15 @@ def obtener_psicologos():
 # ============================================================
 # 💬 CONVERSACIONES (Chatbot ↔ Usuario)
 # ============================================================
+
 def guardar_conversacion(estudiante_id, mensaje_usuario, emocion_detectada,
                          nivel_estres, ansiedad, depresion, respuesta_chatbot,
                          conv_id=None, emocion_cod=None):
-    """
-    Guarda una conversación en Firestore. Si se pasa conv_id, actualiza ese documento.
-    """
     ahora = datetime.datetime.now(tz)
-
     doc_ref = (
         db.collection("conversaciones").document(conv_id)
         if conv_id else db.collection("conversaciones").document()
     )
-
     data = {
         "estudiante_id": estudiante_id,
         "mensaje_usuario": mensaje_usuario,
@@ -111,10 +122,8 @@ def guardar_conversacion(estudiante_id, mensaje_usuario, emocion_detectada,
         "hora": ahora.strftime("%H:%M:%S"),
         "timestamp": ahora,
     }
-
     if emocion_cod is not None:
         data["emocion_cod"] = emocion_cod
-
     doc_ref.set(data)
     return doc_ref.id
 
@@ -125,8 +134,9 @@ def obtener_conversaciones(estudiante_id=None):
     return [doc.to_dict() | {"id": doc.id} for doc in ref.stream()]
 
 # ============================================================
-# 📌 DERIVACIONES (cuando hay riesgo emocional)
+# 📌 DERIVACIONES
 # ============================================================
+
 ESTADOS_DERIVACION = ("pendiente", "completada")
 ESTADO_LABELS = {
     "pendiente": "Pendiente ⏳",
@@ -137,7 +147,6 @@ def guardar_derivacion(conversacion_id, psicologo_id, estudiante_id=None,
                        mensaje_estudiante=None, estado="pendiente"):
     if estado not in ESTADOS_DERIVACION:
         raise ValueError(f"Estado inválido: {estado}")
-
     doc_ref = db.collection("derivaciones").document()
     data = {
         "conversacion_id": conversacion_id,
@@ -151,12 +160,12 @@ def guardar_derivacion(conversacion_id, psicologo_id, estudiante_id=None,
     return doc_ref.id
 
 def obtener_derivaciones():
-    docs = db.collection("derivaciones").stream()
-    return [{"id": d.id, **d.to_dict()} for d in docs]
+    return [{"id": d.id, **d.to_dict()} for d in db.collection("derivaciones").stream()]
 
 # ============================================================
 # 🎯 RECOMENDACIONES
 # ============================================================
+
 def guardar_recomendacion(estudiante_id, texto, tipo=None, util=None):
     ahora = datetime.datetime.now(tz)
     doc_ref = db.collection("recomendaciones").document()

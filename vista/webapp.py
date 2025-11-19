@@ -19,7 +19,12 @@ from modelo.firebase_models import (
 )
 
 # --- Configuración base de la app ---
-app = Flask(__name__, template_folder="templates")
+app = Flask(
+    __name__,
+    template_folder="templates",   # ✔ usa /vista/templates
+    static_folder="static"         # ✔ usa /vista/static
+)
+
 app.secret_key = "emotibot-secret"
 controller = ChatbotController()
 
@@ -136,7 +141,7 @@ def panel_psicologo():
         estudiantes_list = obtener_estudiantes()
         estudiantes_dict = {e["id"]: e for e in estudiantes_list}
 
-        # Filtrar solo conversaciones derivadas
+        # Filtrar conversaciones derivadas
         conversaciones = [c for c in conversaciones if c["id"] in deriv_map]
 
         # Enriquecer datos
@@ -214,7 +219,7 @@ def chat():
 
 
 # --------------------------------------------------------------------
-# ENDPOINT API (para AJAX / JS)
+# ENDPOINT API
 # --------------------------------------------------------------------
 @app.route("/api/chat", methods=["POST"])
 def chat_api():
@@ -236,7 +241,7 @@ def chat_api():
 
 
 # --------------------------------------------------------------------
-# HISTORIAL DEL ESTUDIANTE (vista psicólogo)
+# HISTORIAL DEL ESTUDIANTE
 # --------------------------------------------------------------------
 @app.route("/historial/<estudiante_id>")
 def historial_chat(estudiante_id):
@@ -282,5 +287,5 @@ def logout():
 # --------------------------------------------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"🚀 Emotibot ejecutándose en http://127.0.0.1:{port}")
-    app.run(host="127.0.0.1", port=port, debug=True)
+    print(f"🚀 Emotibot ejecutándose en http://0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port)
