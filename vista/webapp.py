@@ -1,6 +1,7 @@
 # vista/webapp.py
 import sys
 import os
+import binascii
 import traceback
 from flask import (
     Flask, render_template, request, redirect, url_for,
@@ -25,7 +26,7 @@ app = Flask(
     static_folder="static"         # ✔ usa /vista/static
 )
 
-app.secret_key = "emotibot-secret"
+app.secret_key = os.environ.get("SECRET_KEY") or binascii.hexlify(os.urandom(24)).decode()
 controller = ChatbotController()
 
 
