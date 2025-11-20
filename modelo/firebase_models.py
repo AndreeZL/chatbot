@@ -1,5 +1,3 @@
-# modelo/firebase_models.py
-
 import os
 import datetime
 import pytz
@@ -9,35 +7,23 @@ from firebase_admin import credentials, firestore
 from werkzeug.security import generate_password_hash
 
 # ============================================================
-# 🔥 Inicialización de Firebase
+# 🔥 Inicialización de Firebase desde variable de entorno
 # ============================================================
 
-# Directorio base del script
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+firebase_cred_json = os.environ.get("FIREBASE_CREDENTIALS")
 
-# Intentar usar variable de entorno
-cred_env = os.environ.get("FIREBASE_CREDENTIALS")
+if not firebase_cred_json:
+    raise FileNotFoundError(
+        "No se encontró FIREBASE_CREDENTIALS en las variables de entorno."
+    )
+
+try:
+    cred_dict = json.loads(firebase_cred_json)
+except json.JSONDecodeError as e:
+    raise ValueError("FIREBASE_CREDENTIALS no es un JSON válido") from e
 
 if not firebase_admin._apps:
-    if cred_env:
-        try:
-            # Si la variable es JSON completo
-            cred_dict = json.loads(cred_env)
-            cred = credentials.Certificate(cred_dict)
-        except json.JSONDecodeError:
-            # Si la variable es ruta a archivo
-            if os.path.isfile(cred_env):
-                cred = credentials.Certificate(cred_env)
-            else:
-                print("⚠️ FIREBASE_CREDENTIALS no válido, usando archivo local...")
-                json_path = os.path.join(BASE_DIR, "chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")
-                cred = credentials.Certificate(json_path)
-    else:
-        # Usar archivo local
-        print("⚠️ No se encontró FIREBASE_CREDENTIALS, usando archivo local...")
-        json_path = os.path.join(BASE_DIR, "chatbot-78eec-firebase-adminsdk-fbsvc-b0eea0da20.json")
-        cred = credentials.Certificate(json_path)
-
+    cred = credentials.Certificate(cred_dict)
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
@@ -99,7 +85,7 @@ def obtener_psicologos():
     return [doc.to_dict() | {"id": doc.id} for doc in db.collection("psicologos").stream()]
 
 # ============================================================
-# 💬 CONVERSACIONES (Chatbot ↔ Usuario)
+# 💬 CONVERSACIONES
 # ============================================================
 
 def guardar_conversacion(estudiante_id, mensaje_usuario, emocion_detectada,
