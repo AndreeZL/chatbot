@@ -3,13 +3,18 @@ import sys
 import os
 import binascii
 import traceback
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
+
 from flask import (
     Flask, render_template, request, redirect, url_for,
     session, flash, jsonify
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Ajustar ruta para imports relativos
+# Ajustar rutas para imports relativos
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # --- Imports internos ---
@@ -22,29 +27,27 @@ from modelo.firebase_models import (
 # --- Configuración base de la app ---
 app = Flask(
     __name__,
-    template_folder="templates",   # ✔ usa /vista/templates
-    static_folder="static"         # ✔ usa /vista/static
+    template_folder="templates",     # ✔ usa /vista/templates
+    static_folder="static"           # ✔ usa /vista/static
 )
 
-app.secret_key = os.environ.get("SECRET_KEY") or binascii.hexlify(os.urandom(24)).decode()
-controller = ChatbotController()
+# SECRET KEY desde env
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or binascii.hexlify(os.urandom(24)).decode()
 
+controller = ChatbotController()
 
 # --------------------------------------------------------------------
 # LANDING PAGE
 # --------------------------------------------------------------------
 @app.route("/")
 def index():
-    """Página de inicio"""
     return render_template("landing.html")
-
 
 # --------------------------------------------------------------------
 # REGISTRO DE ESTUDIANTE
 # --------------------------------------------------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """Registro de nuevos estudiantes"""
     if request.method == "POST":
         nombre = request.form.get("nombre")
         correo = request.form.get("correo")
@@ -61,6 +64,7 @@ def register():
             return render_template("register.html")
 
         hashed_password = generate_password_hash(password)
+
         db.collection("estudiantes").add({
             "nombre": nombre,
             "correo": correo,
@@ -73,13 +77,11 @@ def register():
 
     return render_template("register.html")
 
-
 # --------------------------------------------------------------------
 # LOGIN ESTUDIANTE
 # --------------------------------------------------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    """Inicio de sesión del estudiante"""
     if request.method == "POST":
         correo = request.form.get("correo")
         password = request.form.get("password")
@@ -99,13 +101,11 @@ def login():
 
     return render_template("login.html")
 
-
 # --------------------------------------------------------------------
 # LOGIN PSICÓLOGO
 # --------------------------------------------------------------------
 @app.route("/login_psicologo", methods=["GET", "POST"])
 def login_psicologo():
-    """Inicio de sesión para psicólogos"""
     if request.method == "POST":
         correo = request.form.get("correo")
         password = request.form.get("password")
@@ -124,13 +124,11 @@ def login_psicologo():
 
     return render_template("login_psicologo.html")
 
-
 # --------------------------------------------------------------------
 # PANEL DEL PSICÓLOGO
 # --------------------------------------------------------------------
 @app.route("/panel_psicologo")
 def panel_psicologo():
-    """Panel principal donde el psicólogo ve las derivaciones"""
     if session.get("rol") != "psicologo":
         return redirect(url_for("login_psicologo"))
 
@@ -142,10 +140,8 @@ def panel_psicologo():
         estudiantes_list = obtener_estudiantes()
         estudiantes_dict = {e["id"]: e for e in estudiantes_list}
 
-        # Filtrar conversaciones derivadas
         conversaciones = [c for c in conversaciones if c["id"] in deriv_map]
 
-        # Enriquecer datos
         for conv in conversaciones:
             est = estudiantes_dict.get(conv["estudiante_id"], {})
             conv["estudiante_nombre"] = est.get("nombre", "Desconocido")
@@ -163,13 +159,11 @@ def panel_psicologo():
         traceback.print_exc()
         return "Error cargando el panel del psicólogo.", 500
 
-
 # --------------------------------------------------------------------
 # ACTUALIZAR ESTADO DE DERIVACIÓN
 # --------------------------------------------------------------------
 @app.route("/actualizar_estado_derivacion", methods=["POST"])
 def actualizar_estado_derivacion():
-    """Permite actualizar el estado de una derivación"""
     if session.get("rol") != "psicologo":
         return jsonify({"success": False, "msg": "No autorizado"}), 401
 
@@ -187,13 +181,11 @@ def actualizar_estado_derivacion():
         print("[ERROR ESTADO DERIVACIÓN]:", e)
         return jsonify({"success": False, "msg": "Error al actualizar"}), 500
 
-
 # --------------------------------------------------------------------
-# CHAT PRINCIPAL (ESTUDIANTE)
+# CHAT PRINCIPAL
 # --------------------------------------------------------------------
 @app.route("/chat", methods=["GET", "POST"])
 def chat():
-    """Página principal del chat para estudiantes"""
     if session.get("rol") != "estudiante":
         return redirect(url_for("login"))
 
@@ -208,7 +200,7 @@ def chat():
             except Exception as e:
                 print("[ERROR CHATBOT]:", e)
                 traceback.print_exc()
-                ultima_respuesta = "⚠️ Hubo un error al procesar tu mensaje. Intenta nuevamente."
+                ultima_respuesta = "⚠️ Hubo un error al procesar tu mensaje."
 
     mensajes = controller.obtener_conversacion(session["correo"])
     return render_template(
@@ -218,13 +210,11 @@ def chat():
         ultima_respuesta=ultima_respuesta
     )
 
-
 # --------------------------------------------------------------------
-# ENDPOINT API
+# API CHAT
 # --------------------------------------------------------------------
 @app.route("/api/chat", methods=["POST"])
 def chat_api():
-    """Versión API para interacción AJAX"""
     try:
         data = request.get_json()
         texto = data.get("mensaje")
@@ -235,18 +225,17 @@ def chat_api():
 
         respuesta = controller.procesar_mensaje(correo, texto)
         return jsonify(respuesta)
+
     except Exception as e:
         print("[ERROR API CHAT]:", e)
         traceback.print_exc()
         return jsonify({"error": "Error interno del servidor"}), 500
 
-
 # --------------------------------------------------------------------
-# HISTORIAL DEL ESTUDIANTE
+# HISTORIAL
 # --------------------------------------------------------------------
 @app.route("/historial/<estudiante_id>")
 def historial_chat(estudiante_id):
-    """Historial de conversaciones visible solo para psicólogo"""
     if session.get("rol") != "psicologo":
         return redirect(url_for("login_psicologo"))
 
@@ -259,32 +248,27 @@ def historial_chat(estudiante_id):
 
     return render_template("historial_chat.html", estudiante=estudiante, conversaciones=conversaciones)
 
-
 # --------------------------------------------------------------------
-# DIRECTORIO DE PSICÓLOGOS
+# DIRECTORIO
 # --------------------------------------------------------------------
 @app.route("/directorio")
 def directorio():
-    """Directorio público de psicólogos"""
     if session.get("rol") != "estudiante":
         return redirect(url_for("login"))
 
     profesionales = controller.obtener_profesionales()
     return render_template("directorio.html", profesionales=profesionales)
 
-
 # --------------------------------------------------------------------
 # LOGOUT
 # --------------------------------------------------------------------
 @app.route("/logout")
 def logout():
-    """Cerrar sesión actual"""
     session.clear()
     return redirect(url_for("login"))
 
-
 # --------------------------------------------------------------------
-# MAIN APP
+# MAIN
 # --------------------------------------------------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
