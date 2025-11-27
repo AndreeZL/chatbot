@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Sugerir Recurso</title>
+<style>
+body{font-family:Segoe UI, Tahoma, sans-serif;background:#f6f9fc;padding:20px}
+.container{max-width:720px;margin:0 auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+label{display:block;margin-top:10px}
+input,textarea{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #ddd}
+button{background:#379683;color:#fff;padding:10px 14px;border-radius:8px;border:none;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Sugerir Recurso</h1>
+  <form id="form" method="POST" action="{{ url_for('sugerir_recurso_route') }}">
+    <label>Título</label>
+    <input name="title" required>
+    <label>Descripción</label>
+    <textarea name="description" rows="4"></textarea>
+    <label>URL</label>
+    <input name="url" required>
+    <button type="submit">Enviar</button>
+  </form>
+  <p><a href="{{ url_for('chat') }}">← Volver al chat</a></p>
+</div>
+</body>
+</html>

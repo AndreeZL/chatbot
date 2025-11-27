@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Enviar Reporte Anónimo</title>
+<style>body{font-family:Segoe UI, Tahoma, sans-serif;padding:20px;background:#f7fbfb} .card{max-width:700px;margin:0 auto;background:#fff;padding:18px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.04)} label{display:block;margin-top:8px} textarea{width:100%;height:120px;padding:10px} button{margin-top:10px;padding:10px 14px;background:#379683;color:#fff;border:none;border-radius:8px}</style>
+</head>
+<body>
+<div class="card">
+  <h2>Enviar Reporte Anónimo</h2>
+  <form id="form" method="POST" action="{{ url_for('reportes_anonimos_route') }}">
+    <label>Mensaje</label>
+    <textarea name="texto" required placeholder="Describe cómo funciona la app o qué mejorar..."></textarea>
+    <label>Categoría (opcional)</label>
+    <input type="text" name="categoria" />
+    <button type="submit">Enviar</button>
+  </form>
+</div>
+<script>
+document.getElementById('form').addEventListener('submit', function(e){
+  e.preventDefault();
+  // usar URLSearchParams en vez de FormData para enviar application/x-www-form-urlencoded
+  const params = new URLSearchParams(new FormData(this));
+  fetch(this.action,{method:'POST', body: params, headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}})
+    .then(r=>r.json())
+    .then(d=>{ if(d.success) { alert('Reporte enviado'); window.location.href='{{ url_for("chat") }}' } else alert('Error'); })
+    .catch(e=>console.error(e));
+});
+</script>
+</body>
+</html>

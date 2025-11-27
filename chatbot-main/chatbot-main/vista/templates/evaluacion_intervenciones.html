@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Evaluación de Intervenciones</title>
+<style>
+body{font-family:Segoe UI, Tahoma, sans-serif;background:#fff9f3;color:#222;padding:20px}
+.container{max-width:1000px;margin:0 auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.05)}
+h1{color:#355C7D}
+.card{padding:12px;border-radius:8px;border:1px solid #eee;margin-bottom:10px}
+.k{font-weight:bold}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Evaluación de Efectividad de Intervenciones</h1>
+  <a href="{{ url_for('panel_psicologo') }}">← Volver al panel</a>
+  {% if resultado and resultado|length > 0 %}
+    {% for est, vals in resultado.items() %}
+      {% set nombre = estudiantes.get(est, {}).get('nombre', est) %}
+      {% set antes = vals.get('antes') if vals is mapping else (vals.antes if vals else None) %}
+      {% set despues = vals.get('despues') if vals is mapping else (vals.despues if vals else None) %}
+      <div class="card">
+        <div class="k">Estudiante: {{ nombre }}</div>
+        <div>Antes - Ansiedad: {{ antes['ansiedad'] if antes and antes.get('ansiedad') is not none else '—' }}, Depresión: {{ antes['depresion'] if antes and antes.get('depresion') is not none else '—' }}</div>
+        <div>Después - Ansiedad: {{ despues['ansiedad'] if despues and despues.get('ansiedad') is not none else '—' }}, Depresión: {{ despues['depresion'] if despues and despues.get('depresion') is not none else '—' }}</div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No hay datos suficientes para evaluar intervenciones.</p>
+  {% endif %}
+</div>
+</body>
+</html>

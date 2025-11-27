@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Validaciones de Predicciones</title>
+<style>
+body{font-family:Segoe UI, Tahoma, sans-serif;background:#fbfdff;color:#222;padding:20px}
+.container{max-width:900px;margin:0 auto;background:#fff;padding:18px;border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.05)}
+h1{color:#355C7D}
+.table{width:100%}
+th,td{padding:10px;border-bottom:1px solid #eee}
+.valid-true{color:green}
+.valid-false{color:#c62828}
+.badge{display:inline-block;background:#eee;padding:4px 8px;border-radius:8px;margin-right:6px}
+.small{font-size:0.9em;color:#666}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Validaciones de Predicciones</h1>
+  <a href="{{ url_for('panel_psicologo') }}">← Volver al panel</a>
+
+  <h3>Resumen de emociones</h3>
+  <div>
+    <strong>Por etiqueta:</strong>
+    {% if counts_by_label and counts_by_label|length>0 %}
+      {% for k,v in counts_by_label.items() %}
+        <span class="badge">{{ k }}: {{ v }}</span>
+      {% endfor %}
+    {% else %}
+      <span class="badge">No hay validaciones</span>
+    {% endif %}
+  </div>
+  <div style="margin-top:8px">
+    <strong>Por código:</strong>
+    {% if counts_by_code and counts_by_code|length>0 %}
+      {% for k,v in counts_by_code.items() %}
+        <span class="badge">{{ emotion_labels_map.get(k, ('code_'~k)) }} ({{ k }}): {{ v }}</span>
+      {% endfor %}
+    {% else %}
+      <span class="badge">No hay validaciones</span>
+    {% endif %}
+  </div>
+
+  <h3 style="margin-top:10px">Validez por etiqueta</h3>
+  <div>
+    {% if counts_label_validity and counts_label_validity|length>0 %}
+      {% for label, stats in counts_label_validity.items() %}
+        <div class="card" style="margin-bottom:6px;padding:8px;border:1px solid #eee;border-radius:8px">
+          <strong>{{ label }}</strong>
+          <div class="small">Válidas: {{ stats.valid }}, No válidas: {{ stats.invalid }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="small">No hay datos de validez por etiqueta.</div>
+    {% endif %}
+  </div>
+
+  {% if validaciones and validaciones|length > 0 %}
+  <table>
+    <tr><th>Conversación</th><th>Validador</th><th>Válida</th><th>Comentarios</th><th>Emoción</th><th>Fecha</th></tr>
+    {% for v in validaciones %}
+    <tr>
+      <td>{{ v.conversacion_id }}</td>
+      <td>{{ v.validador_id or '-' }}</td>
+      <td class="{{ 'valid-true' if v.valido else 'valid-false' }}">{{ 'Sí' if v.valido else 'No' }}</td>
+      <td>{{ v.comentarios or '-' }}</td>
+      <td>{{ v.emocion_label or (v.emocion_cod ~ '') }}</td>
+      <td>{{ v.fecha }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p>No hay validaciones registradas.</p>
+  {% endif %}
+</div>
+</body>
+</html>

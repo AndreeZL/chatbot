@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Recursos Sugeridos</title>
+<style>
+body{font-family:Segoe UI, Tahoma, sans-serif;background:#fff;padding:20px}
+.container{max-width:1000px;margin:0 auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.04)}
+h1{color:#355C7D}
+.table{width:100%}
+th,td{padding:8px;border-bottom:1px solid #eee}
+.btn{padding:6px 10px;border-radius:8px;background:#379683;color:#fff;text-decoration:none}
+.small{font-size:0.9em;color:#555}
+.status-pending{color:#c68500}
+.status-approved{color:green}
+.status-rejected{color:#c62828}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Recursos Sugeridos</h1>
+  <a href="{{ url_for('panel_psicologo') }}" class="btn">← Volver</a>
+  {% if recursos and recursos|length > 0 %}
+    <table>
+      <tr><th>Título</th><th>Descripción</th><th>Creado por</th><th>URL</th><th>Estado</th><th>Acciones</th></tr>
+      {% for r in recursos %}
+        <tr>
+          <td>{{ r.get('title') or r.get('titulo') or '—' }}</td>
+          <td class="small">{{ r.get('description') or r.get('descripcion') or '—' }}</td>
+          <td>{{ estudiantes.get(r.get('created_by'), {}).get('nombre') if r.get('created_by') else 'Anónimo' }}</td>
+          <td>
+            {% if r.get('url') %}
+              <a href="{{ r.get('url') }}" target="_blank">{{ r.get('url') }}</a>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>
+            {% set st = (r.get('status') or 'pending') %}
+            <span class="{% if st=='pending' %}status-pending{% elif st=='approved' %}status-approved{% elif st=='rejected' %}status-rejected{% endif %}">{{ st }}</span>
+          </td>
+          <td>
+            {% if r.get('status') == 'pending' %}
+                <button data-id="{{ r.get('id') }}" data-status="approved" onclick="validar(this.dataset.id,this.dataset.status)">Aprobar</button>
+                <button data-id="{{ r.get('id') }}" data-status="rejected" onclick="validar(this.dataset.id,this.dataset.status)">Rechazar</button>
+              {% else %}
+                —
+              {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No hay recursos sugeridos.</p>
+  {% endif %}
+</div>
+<script>
+function validar(id, status){
+  fetch('/validar_recurso_sugerido', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id:id, status:status})
+  }).then(r=>r.json()).then(d=>{ if(d.success) location.reload(); else alert('Error'); }).catch(e=>console.error(e));
+}
+</script>
+</body>
+</html>

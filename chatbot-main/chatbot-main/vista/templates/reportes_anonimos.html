@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Reportes Anónimos</title>
+<style>
+body{font-family:Segoe UI, Tahoma, sans-serif;background:#f6f9fc;color:#222;padding:20px}
+.container{max-width:900px;margin:0 auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.07)}
+h1{color:#355C7D}
+table{width:100%;border-collapse:collapse;margin-top:15px}
+th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+.btn{display:inline-block;padding:8px 12px;background:#379683;color:#fff;border-radius:8px;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Reportes Anónimos</h1>
+  <a href="{{ url_for('panel_psicologo') }}" class="btn">← Volver al panel</a>
+
+  {% if reportes and reportes|length > 0 %}
+  <table>
+    <tr><th>Texto</th><th>Categoría</th><th>Fecha</th><th>Hora</th></tr>
+    {% for r in reportes %}
+    <tr>
+      <td>{{ r.texto }}</td>
+      <td>{{ r.categoria or '-' }}</td>
+      <td>{{ r.fecha }}</td>
+      <td>{{ r.hora }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p>No hay reportes anónimos registrados.</p>
+  {% endif %}
+</div>
+</body>
+</html>

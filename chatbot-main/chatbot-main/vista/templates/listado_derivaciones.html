@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Listado de Derivaciones</title>
+<style>
+body{font-family:Segoe UI, Tahoma, sans-serif;background:#eef7f3;color:#222;padding:20px}
+.container{max-width:950px;margin:0 auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+h1{color:#355C7D}
+.table{width:100%}
+th,td{padding:10px;border-bottom:1px solid #eee}
+.badge{padding:6px 10px;border-radius:8px;color:#fff}
+.pend{background:#f0ad4e}
+.comp{background:#28a745}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Listado de Derivaciones</h1>
+  <a href="{{ url_for('panel_psicologo') }}">← Volver al panel</a>
+  {% if derivaciones and derivaciones|length > 0 %}
+  <table>
+    <tr><th>Estudiante</th><th>Conversación</th><th>Mensaje</th><th>Fecha</th><th>Estado</th></tr>
+    {% for d in derivaciones %}
+    <tr>
+      <td>{{ estudiantes.get(d.estudiante_id, {}).get('nombre', '-') }}</td>
+      <td>{{ d.conversacion_id }}</td>
+      <td>{{ d.mensaje_estudiante or '-' }}</td>
+      <td>{{ d.fecha_derivacion }}</td>
+      <td>
+        <span class="badge {{ 'pend' if d.estado=='pendiente' else 'comp' }}">{{ ESTADO_LABELS.get(d.estado, d.estado) }}</span>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+    <p>No hay derivaciones registradas.</p>
+  {% endif %}
+</div>
+</body>
+</html>

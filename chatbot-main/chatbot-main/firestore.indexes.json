@@ -1,0 +1,46 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "conversaciones",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estudiante_id", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recomendaciones",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estudiante_id", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "validaciones_predicciones",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "conversacion_id", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recursos_sugeridos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notificaciones",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

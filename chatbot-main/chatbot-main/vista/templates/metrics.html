@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Métricas de Bienestar</title>
+<style>
+body{font-family:Segoe UI, Tahoma, sans-serif;background:#fff;color:#222;padding:20px}
+.container{max-width:860px;margin:0 auto;background:#f7fcff;padding:20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.05)}
+h1{color:#355C7D}
+.metric{display:flex;gap:16px;align-items:center;margin:16px 0}
+.card{flex:1;background:#fff;padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+.large{font-size:28px;color:#379683}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Métricas de Bienestar Estudiantil</h1>
+  <a href="{{ url_for('panel_psicologo') }}">← Volver al panel</a>
+
+  <div class="metric">
+    <div class="card">
+      <div>Total conversaciones</div>
+      <div class="large">{{ metrics.total_conversaciones }}</div>
+    </div>
+    <div class="card">
+      <div>Promedio ansiedad</div>
+      <div class="large">{{ metrics.promedio_ansiedad }}</div>
+    </div>
+    <div class="card">
+      <div>Promedio depresión</div>
+      <div class="large">{{ metrics.promedio_depresion }}</div>
+    </div>
+  </div>
+
+  <div class="metric">
+    <div class="card">
+      <div>Total derivaciones</div>
+      <div class="large">{{ metrics.total_derivaciones }}</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
